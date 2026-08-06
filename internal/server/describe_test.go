@@ -33,7 +33,7 @@ func TestDescribe_ExternalWriteReachesTheSessionAPI(t *testing.T) {
 	}
 	sess.InitTestChannels()
 
-	s, err := NewServer(sess, frontendFS, "", false, "", "", "test", 0, "")
+	s, err := NewServer(sess, frontendFS, "", "test", 0, "")
 	if err != nil {
 		t.Fatal(err)
 	}
