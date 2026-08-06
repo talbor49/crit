@@ -15,7 +15,6 @@ import (
 	"github.com/tomasz-tomczyk/crit/internal/forge"
 	"github.com/tomasz-tomczyk/crit/internal/review"
 	"github.com/tomasz-tomczyk/crit/internal/session"
-	"github.com/tomasz-tomczyk/crit/internal/share"
 )
 
 type pushFlags struct {
@@ -139,7 +138,7 @@ func runPush(ctx context.Context, request forge.PushRequest) (forge.PushResult, 
 	if err != nil {
 		return forge.PushResult{}, err
 	}
-	if err := share.CheckGitHubSyncAllowed(cj, "crit push"); err != nil {
+	if err := checkGitLabSyncAllowed(cj, "crit push"); err != nil {
 		return forge.PushResult{}, err
 	}
 	if cj.ActiveDiffScope == string(session.DiffScopeFullStack) {

@@ -16,7 +16,6 @@ import (
 	"github.com/tomasz-tomczyk/crit/internal/forge"
 	"github.com/tomasz-tomczyk/crit/internal/review"
 	"github.com/tomasz-tomczyk/crit/internal/session"
-	"github.com/tomasz-tomczyk/crit/internal/share"
 	"github.com/tomasz-tomczyk/crit/internal/vcs"
 )
 
@@ -123,7 +122,7 @@ func runPull(ctx context.Context, request forge.PullRequest) (forge.PullResult, 
 	if err != nil {
 		return forge.PullResult{}, err
 	}
-	if err := share.CheckGitHubSyncAllowed(cj, "crit pull"); err != nil {
+	if err := checkGitLabSyncAllowed(cj, "crit pull"); err != nil {
 		return forge.PullResult{}, err
 	}
 

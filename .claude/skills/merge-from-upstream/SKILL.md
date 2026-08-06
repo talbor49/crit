@@ -1,9 +1,9 @@
 ---
-name: sync-fork
-description: Sync this crit fork with its upstream (tomasz-tomczyk/crit) — merge upstream/main into local main, commit and push to origin (talbor49/crit), then rebuild the installed binary at ~/.local/bin/crit. Use when the user says "sync the fork", "update from upstream", "pull upstream changes", "merge upstream and push", or "update and rebuild crit".
+name: merge-from-upstream
+description: Merge upstream (tomasz-tomczyk/crit) into this crit fork — merge upstream/main into local main, commit and push to origin (talbor49/crit), then rebuild the installed binary at ~/.local/bin/crit. Use when the user says "merge from upstream", "sync the fork", "update from upstream", "pull upstream changes", "merge upstream and push", or "update and rebuild crit".
 ---
 
-# Sync fork with upstream
+# Merge from upstream
 
 Fork layout: `origin` = `talbor49/crit`, upstream = `tomasz-tomczyk/crit`, both default to `main`.
 Merge strategy, never rebase — history is not rewritten, so `push` never needs `--force`.

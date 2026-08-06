@@ -155,27 +155,6 @@ Options:
       --no-open           Do not open a browser
   -q, --quiet             On success, suppress connect/start status, tips, and session summary`},
 	{name: "story", handler: runStory, helpFn: printStoryUsage, bareHelp: true},
-	{name: "auth", handler: runAuth, help: `Usage: crit auth <login|logout|whoami>
-
-Manage crit-web authentication.
-
-Commands:
-  login     Log in to crit-web
-  logout    Log out and revoke the saved token
-  whoami    Show the current user`, subcommands: []commandDescriptor{
-		{name: "login", help: `Usage: crit auth login [--force]
-
-Log in to crit-web with the device authorization flow.
-
-Options:
-      --force  Reauthenticate even when already logged in`},
-		{name: "logout", help: `Usage: crit auth logout
-
-Revoke the current token and remove saved credentials.`},
-		{name: "whoami", help: `Usage: crit auth whoami
-
-Show the currently authenticated crit-web user.`},
-	}},
 	{name: "stop", handler: runStop, help: `Usage: crit stop [--all] [file...]
 
 Stop the review daemon for the current session. Specify files to target an

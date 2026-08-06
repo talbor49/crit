@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/tomasz-tomczyk/crit/internal/auth"
 	"github.com/tomasz-tomczyk/crit/internal/clicmd"
 	"github.com/tomasz-tomczyk/crit/internal/comment"
 	"github.com/tomasz-tomczyk/crit/internal/config"
@@ -32,7 +31,6 @@ func runMR(args []string)        { clicmd.Exit(forge.RunChange(forge.GitLab, arg
 
 func runLive(args []string)    { live.RunLive(args) }
 func runPreview(args []string) { preview.RunPreview(args) }
-func runAuth(args []string)    { auth.RunAuth(args) }
 func runStats(args []string)   { session.RunStats(args) }
 
 func runPlanHook()      { clicmd.Exit(session.RunPlanHook()) }
