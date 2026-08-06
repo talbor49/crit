@@ -21,28 +21,6 @@ type commandDescriptor struct {
 // commandRegistry is the single source of truth for command dispatch, help,
 // ordering, and public visibility.
 var commandRegistry = []commandDescriptor{
-	{name: "share", handler: runShare, help: `Usage: crit share [options] <file> [file...]
-       crit share [options] --preview <file.html>
-
-Share files to crit-web and print the review URL.
-
-Options:
-  -o, --output <dir>       Crit data root for reviews
-      --share-url <url>    Share service URL
-      --org <slug>         Organization slug
-      --visibility <level> Review visibility
-      --preview <file>     Share a local HTML preview
-      --qr                 Print a QR code`},
-	{name: "fetch", handler: runFetch, help: `Usage: crit fetch [--output <dir>]
-
-Fetch comments from a shared crit-web review.`},
-	{name: "unpublish", handler: runUnpublish, help: `Usage: crit unpublish [options] [file...]
-
-Remove a shared review from crit-web.
-
-Options:
-  -o, --output <dir>       Crit data root for reviews
-      --share-url <url>    Share service URL`},
 	{name: "install", handler: runInstall, helpFn: printInstallUsage},
 	{name: "config", handler: runConfig, bareHelp: true, helpFn: config.PrintConfigHelp},
 	{name: "check", handler: func([]string) { runCheck() }, help: `Usage: crit check
@@ -287,11 +265,6 @@ Comments:
   crit comment --clear                       Remove all comments
   crit comments [--session <id>] [--json] [--all] [review]    List unresolved comments (review-level first)
 
-Sharing:
-  crit share <file> [file...]                Share files to crit-web, print URL
-  crit fetch [--output <dir>]                Fetch comments from crit-web
-  crit unpublish [file...]                   Remove a shared review from crit-web
-
 Remote review sync (provider auto-detected, or set "forge" in config):
   crit pull [number|url]                     Fetch PR/MR comments into the review file
   crit push [--dry-run] [number|url]         Post review comments to a PR/MR
@@ -304,7 +277,6 @@ Setup & management:
   crit stop [--all]                          Stop the daemon
   crit cleanup [--days N] [--force]          Delete stale review files (default: 7 days)
   crit config [--generate]                   Show resolved configuration
-  crit auth login|logout|whoami              Manage crit-web authentication
 
   Agents: %s, all
 
@@ -318,24 +290,20 @@ Options:
       --no-open               Don't auto-open browser
       --no-ignore             Disable all file ignore patterns
   -q, --quiet                 On success, suppress connect/start status, tips, and session summary
-      --share-url <url>       Share service URL (e.g. https://crit.md or self-hosted)
       --base-branch <branch>  Base branch to diff against (overrides auto-detection)
       --scope <mode>          Diff scope for PR/MR review: layer (default) or full-stack
       --session <id>          Reconnect to an existing review session (from stderr or next_command)
       --forge <provider>      Select pull/push provider: auto, github, or gitlab
       --remote                Read --pr/--mr files via that change request's forge API
-      --qr                    Print QR code of share URL (with crit share)
   -v, --version               Print version
 
 Environment:
-  CRIT_SHARE_URL              Override the share service URL
   CRIT_PUBLIC_URL             Override the advertised review URL (listen address unchanged)
   CRIT_PORT                   Override the default port
   CRIT_HOST                   Override the listen host (default 127.0.0.1)
   CRIT_ALLOW_UNAUTHENTICATED_NETWORK
                               Same as --allow-unauthenticated-network (1/true/yes/on)
   CRIT_NO_UPDATE_CHECK        Disable update check on startup
-  CRIT_AUTH_TOKEN             Override the auth token (skip login)
   CRIT_NO_INTEGRATION_CHECK   Disable staleness check and agent detection on startup
 
 Configuration:

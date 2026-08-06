@@ -489,13 +489,6 @@ type CritJSON struct {
 	ReviewComments []Comment               `json:"review_comments,omitempty"`
 	CliArgs        []string                `json:"cli_args,omitempty"`
 	Files          map[string]CritJSONFile `json:"files"`
-	Branch         string                  `json:"branch"`
-	BaseRef        string                  `json:"base_ref"`
-	UpdatedAt      string                  `json:"updated_at"`
-	ReviewRound    int                     `json:"review_round"`
-	ReviewComments []Comment               `json:"review_comments,omitempty"`
-	CliArgs        []string                `json:"cli_args,omitempty"`
-	Files          map[string]CritJSONFile `json:"files"`
 
 	// Title and Description are the optional review header ("what am I looking
 	// at"): a one-line subject and a markdown summary an agent writes with
