@@ -42,6 +42,7 @@ crit/
 14. **Centralized review storage** — `~/.crit/reviews/<key>.json` keyed by cwd + branch (git mode) or cwd + args (file mode)
 15. **VCS abstraction** — `vcs.go` defines a backend interface; `git_vcs.go`, `sapling.go`, and `jj.go` are the implementations. Auto-detected, overridable via `--vcs` flag or `vcs` config key. Subcommands not yet threaded through (see TODO at `main.go:1826`).
 16. **Focus mode** — sub-views over the file list: file focus, range focus (`--range A..B`), stacked focus (range layer in a stacked PR). Lives in `focus_*.go` and `/api/focus`.
+17. **LSP integration (Go)** — `internal/lsp` speaks minimal LSP to `gopls` over stdio for hover / go-to-definition / find-references (`/api/lsp/*`, frontend `web/crit-lsp.js`). Lifecycle: **lazy start** (spawned on first LSP request, not daemon start) + **idle shutdown** (killed after 3 min without requests) + killed on daemon shutdown. Each daemon owns its own manager, so N parallel worktree reviews only pin gopls processes for sessions actively being hovered. Positions are UTF-16 (LSP default = JS native — no conversion). Definition/reference peeks only read files under repo root / GOROOT / GOMODCACHE; there is deliberately no general file-read endpoint. Requests are read-only — no edit-producing method is ever sent.
 
 <important if="you need to build, test, lint, or run crit">
 
@@ -96,7 +97,7 @@ Two-level JSON config files, merged (project overrides global):
 - **Global**: `~/.crit.config.json` — user-wide defaults
 - **Project**: `.crit.config.json` in repo root — per-project overrides
 
-Config keys: `port`, `host`, `no_open`, `quiet`, `output`, `author`, `base_branch`, `ignore_patterns`, `auto_viewed_patterns`, `agent_cmd`, `plan_approve_mode`, `cleanup_on_approve`, `notify_on_round_ready`, `disable_stats`, `no_update_check`, `no_integration_check`, `vcs`, `live_cookie`, `live_cookie_file`, `live_cdp_url`, `close_on_approve_after_ms`.
+Config keys: `port`, `host`, `no_open`, `quiet`, `output`, `author`, `base_branch`, `ignore_patterns`, `auto_viewed_patterns`, `agent_cmd`, `plan_approve_mode`, `cleanup_on_approve`, `notify_on_round_ready`, `disable_stats`, `no_update_check`, `no_integration_check`, `vcs`, `live_cookie`, `live_cookie_file`, `live_cdp_url`, `close_on_approve_after_ms`, `lsp`.
 
 - `base_branch` overrides auto-detected default branch (used as diff base in git mode, and by `crit pull`/`crit push`/`crit comment`)
 - `author` falls back to the configured VCS user name if not set
@@ -108,6 +109,7 @@ Config keys: `port`, `host`, `no_open`, `quiet`, `output`, `author`, `base_branc
 - `ignore_patterns` are unioned (global + project both apply); types: `*.ext`, `dir/`, `exact.file`, `path/*.ext`
 - `auto_viewed_patterns` are unioned (global + project both apply); matched client-side against file paths and applied once per launch to auto-mark matching files viewed (collapsed). No runtime default (empty). Plumbed through `/api/config` only — Go does no glob matching.
 - `vcs` selects backend: `"git"` (default), `"sl"` (sapling), or `"jj"` (Jujutsu)
+- `lsp` (default: `true`) — gopls-backed hover / go-to-definition / find-references for Go diffs. Mergeable from project config: the spawned binary name is fixed, so a repo cannot hijack the command. Inert unless `gopls` is on PATH.
 - `live_cookie` / `live_cookie_file` forward session cookies to the upstream app in live mode (global or project; prefer gitignored `live_cookie_file` e.g. `.crit/live-cookies.txt`). CLI: `crit live --cookie`, `--cookie-file`
 - `live_cdp_url` reuses cookies from a local Chrome DevTools endpoint (global or project). CLI: `crit live --cdp-url`. Explicit `--cookie` values override CDP cookies with the same name.
 - CLI flags override config file values

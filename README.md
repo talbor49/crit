@@ -271,6 +271,43 @@ After the first agent interaction, the comment becomes a **live thread**:
 >
 > You can also specify a model with `--model` (e.g. `claude --model sonnet -p`).
 
+### Code intelligence for Go diffs (LSP)
+
+Reviewing a Go diff, powered by [gopls](https://pkg.go.dev/golang.org/x/tools/gopls):
+
+- **Hover** over code on the new side of a diff → type signature + documentation tooltip
+- **⌘/Ctrl+Click** an identifier → go to definition:
+  - target in the review → jump there (collapsed diff gaps auto-expand)
+  - target elsewhere (unchanged repo file, stdlib, module cache) → an inline **peek popup** (whole file up to 2000 lines, scrollable, definition line highlighted)
+- **⌘/Ctrl+Shift+Click** → find references, grouped by file and ordered by relevance
+- **⌘/Ctrl+Click inside the peek popup** → follow definitions further; `←` / `Esc` steps back through the jump history
+
+#### Enabling it locally
+
+1. Install gopls and make sure both `gopls` and the `go` toolchain are on your `PATH` (gopls cannot build a workspace without `go`):
+
+   ```bash
+   go install golang.org/x/tools/gopls@latest
+   which gopls go   # both must resolve
+   ```
+
+2. Start a review in a Go repository — that's it. LSP is on by default (`lsp` config key, set `"lsp": false` to disable).
+
+3. To verify it's active:
+
+   ```bash
+   curl -s localhost:<port>/api/config | grep lsp_available   # → "lsp_available": true
+   ```
+
+   If it reports `false`: gopls is not on the PATH crit was started from, `lsp` is disabled in config, the session has no repo root (plain files mode), or a range/PR review is active (`--range` / `--pr` — the diff shows content at a fixed SHA, while LSP reads the working tree, so answers could silently mismatch).
+
+Notes:
+
+- gopls starts **lazily** on the first hover and is stopped after 3 minutes of inactivity — running crit in many worktrees at once only keeps language servers alive for reviews you're actively hovering.
+- The very first hover after a cold start can take a few seconds while gopls loads the workspace (the tooltip shows a loading placeholder).
+- Requests are read-only (`hover`, `definition`, `references`); crit never asks a language server to edit anything.
+- Definition targets are only read from your repo, `GOROOT`, and `GOMODCACHE`.
+
 ### Everything else
 
 - **Per-branch review isolation.** Each branch gets its own review file — switch branches freely without losing comments. Review data lives in `~/.crit/reviews/`, not your repo.
@@ -328,6 +365,7 @@ All keys are optional — omit any you don't need.
 | `notify_on_round_ready`| bool     | `false`                    | Opt in to a desktop notification when a review round becomes ready for you (after the agent finishes addressing comments).       |
 | `no_update_check`      | bool     | `false`                    | Don't check for new versions on startup.                                                                                                                                                |
 | `no_integration_check` | bool     | `false`                    | Skip the integration config freshness check on startup.                                                                                                                                 |
+| `lsp`                  | bool     | `true`                     | Language-server features (hover, go-to-definition, find-references) for Go files. Only activates when `gopls` is on PATH. See [Code intelligence for Go diffs](#code-intelligence-for-go-diffs-lsp). |
 | `vcs`                  | string   | auto-detected              | Preferred VCS backend: `"git"`, `"sl"`, or `"jj"`. When set, crit uses this VCS instead of auto-detecting. Falls back to git if the configured VCS isn't available. Can also be set via `--vcs` CLI flag (flag takes precedence over config). |
 | `live_cookie`          | string   | `""`                       | Cookie header value forwarded to the upstream app in live mode (e.g. `"_crit_key=..."`). Global or project. Prefer `live_cookie_file` for secrets. |
 | `live_cookie_file`     | string   | `""`                       | Path to a file with upstream cookies for live mode (raw header lines or Netscape jar). Global or project; relative paths resolve from repo root. |
