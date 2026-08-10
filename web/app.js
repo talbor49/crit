@@ -5917,6 +5917,7 @@
       createReplyInput: createReplyInput,
       iconChevron: ICON_CHEVRON,
       linkifyDom: linkifyCommentRefsInDom,
+      parseSeverity: window.crit.commentCardHelpers.parseSeverity,
     }, opts.deps || {});
     return window.crit.commentCard.buildCommentCard(comment, filePath, merged);
   }

@@ -84,6 +84,34 @@
     return 'pin';
   }
 
+  // parseSeverity — recognises the severity tag agents put on the first line
+  // of a finding ("[Critical] Nil deref when tenant is missing"). Returns
+  // { id, label, title, body } with the tag stripped, or null when the comment
+  // has no tag. A bare "[Critical]" line yields an empty title.
+  var SEVERITIES = {
+    critical: 'Critical',
+    important: 'Important',
+    suggestion: 'Suggestion',
+    'missing test': 'Missing test',
+  };
+  function parseSeverity(body) {
+    var text = String(body == null ? '' : body);
+    var match = /^\s*\[([^\]\n]{1,24})\][ \t]*/.exec(text);
+    if (!match) return null;
+    var key = match[1].trim().toLowerCase();
+    var label = SEVERITIES[key];
+    if (!label) return null;
+    var rest = text.slice(match[0].length);
+    var newline = rest.indexOf('\n');
+    var title = (newline === -1 ? rest : rest.slice(0, newline)).trim();
+    return {
+      id: key.replace(/\s+/g, '-'),
+      label: label,
+      title: title,
+      body: (newline === -1 ? '' : rest.slice(newline + 1)).replace(/^\n+/, ''),
+    };
+  }
+
   // Standard class strings. These are deliberately simple constants so that
   // both renderers stay in sync if we tweak them later. Adding a class here
   // does NOT make every existing card pick it up — call sites still need to
@@ -103,6 +131,7 @@
     formKeyFor: formKeyFor,
     authorColorIndex: authorColorIndex,
     AUTHOR_COLOR_COUNT: AUTHOR_COLOR_COUNT,
+    parseSeverity: parseSeverity,
     BTN_CLASS: BTN_CLASS,
     BTN_SM_CLASS: BTN_SM_CLASS,
     COMMENT_CARD_CLASS: COMMENT_CARD_CLASS,

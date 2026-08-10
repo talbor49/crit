@@ -17,6 +17,8 @@
 //   renderReplyList(comment, filePath, extraClass) — returns the replies <div>
 //   createReplyInput(commentId, filePath) — returns the reply <form>
 //   iconChevron        — inline SVG string for the collapse chevron
+//   parseSeverity(body)— commentCardHelpers.parseSeverity; omit to render the
+//                        body verbatim with no severity headline
 //
 // Optional callbacks (already inverted in steps 1–3):
 //   isPendingAgentRequest(id)    — defaults to () => false
@@ -160,14 +162,36 @@
     header.appendChild(headerLeft);
     header.appendChild(actions);
 
+    // Severity tag ("[Critical] …" on the first line) becomes a coloured
+    // headline instead of literal text in the body.
+    var severity = typeof deps.parseSeverity === 'function' ? deps.parseSeverity(comment.body) : null;
+    var renderedBody = severity ? severity.body : comment.body;
+
     var bodyEl = document.createElement('div');
     bodyEl.className = 'comment-body';
     bodyEl.innerHTML = commentMd
-      ? commentMd.render(comment.body, filePath ? buildCommentEnv(comment, filePath) : undefined)
-      : (comment.body || '');
+      ? commentMd.render(renderedBody, filePath ? buildCommentEnv(comment, filePath) : undefined)
+      : (renderedBody || '');
     if (typeof deps.linkifyDom === 'function') deps.linkifyDom(bodyEl);
 
     card.appendChild(header);
+
+    if (severity) {
+      card.classList.add('has-severity', 'severity-' + severity.id);
+      var headline = document.createElement('div');
+      headline.className = 'comment-severity';
+      var badge = document.createElement('span');
+      badge.className = 'comment-severity-badge';
+      badge.textContent = severity.label;
+      headline.appendChild(badge);
+      if (severity.title) {
+        var titleEl = document.createElement('span');
+        titleEl.className = 'comment-severity-title';
+        titleEl.textContent = severity.title;
+        headline.appendChild(titleEl);
+      }
+      card.appendChild(headline);
+    }
 
     // Drifted anchor context — show original content that was commented on
     if (comment.drifted && comment.anchor && !opts.suppressDrift) {

@@ -233,3 +233,44 @@ test('GitLab badge renders when comment.gitlab_note_id is set', () => {
   assert.equal(badges[0].textContent, 'GitLab');
   assert.equal(badges[0].attrs['aria-label'], 'Synced from GitLab');
 });
+
+test('a severity tag becomes a headline and is stripped from the rendered body', () => {
+  const helpers = require('../crit-comment-card-helpers.js');
+  const deps = Object.assign(baseDeps(), { parseSeverity: helpers.parseSeverity });
+  const out = card.buildCommentCard(
+    { id: 's1', body: '[Critical] Deadlocks on a slow IdP\n\nHolding the lock across the call.', created_at: '2024-01-01T00:00:00Z' },
+    '',
+    { deps }
+  );
+  assert.equal(out.card.classList.contains('has-severity'), true);
+  assert.equal(out.card.classList.contains('severity-critical'), true);
+  const badge = findByClass(out.card, 'comment-severity-badge')[0];
+  const title = findByClass(out.card, 'comment-severity-title')[0];
+  assert.equal(badge.textContent, 'Critical');
+  assert.equal(title.textContent, 'Deadlocks on a slow IdP');
+  const body = findByClass(out.card, 'comment-body')[0];
+  assert.equal(body.innerHTML, '<p>Holding the lock across the call.</p>');
+});
+
+test('an untagged comment renders verbatim with no severity classes', () => {
+  const helpers = require('../crit-comment-card-helpers.js');
+  const deps = Object.assign(baseDeps(), { parseSeverity: helpers.parseSeverity });
+  const out = card.buildCommentCard(
+    { id: 's2', body: 'just a note', created_at: '2024-01-01T00:00:00Z' },
+    '',
+    { deps }
+  );
+  assert.equal(out.card.classList.contains('has-severity'), false);
+  assert.equal(findByClass(out.card, 'comment-severity-badge').length, 0);
+  assert.equal(findByClass(out.card, 'comment-body')[0].innerHTML, '<p>just a note</p>');
+});
+
+test('omitting the parseSeverity dep leaves the body untouched', () => {
+  const out = card.buildCommentCard(
+    { id: 's3', body: '[Critical] x', created_at: '2024-01-01T00:00:00Z' },
+    '',
+    { deps: baseDeps() }
+  );
+  assert.equal(out.card.classList.contains('has-severity'), false);
+  assert.equal(findByClass(out.card, 'comment-body')[0].innerHTML, '<p>[Critical] x</p>');
+});

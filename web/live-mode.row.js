@@ -266,6 +266,7 @@
         renderReplyList: replyListBuilder,
         createReplyInput: function () { return document.createElement('div'); },
         iconChevron: deps.iconChevron || '',
+        parseSeverity: deps.parseSeverity,
       },
     });
 

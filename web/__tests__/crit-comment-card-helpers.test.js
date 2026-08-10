@@ -93,3 +93,41 @@ test('class constants are stable strings', () => {
   assert.equal(helpers.COMMENT_BODY_CLASS, 'comment-body');
   assert.equal(helpers.COMMENT_ACTIONS_CLASS, 'comment-actions');
 });
+
+test('parseSeverity splits the tag, the headline, and the rest', () => {
+  const got = helpers.parseSeverity('[Critical] Nil deref when tenant is missing\n\nWhy it matters: boom.');
+  assert.deepEqual(got, {
+    id: 'critical',
+    label: 'Critical',
+    title: 'Nil deref when tenant is missing',
+    body: 'Why it matters: boom.',
+  });
+});
+
+test('parseSeverity is case-insensitive and handles multi-word tags', () => {
+  assert.equal(helpers.parseSeverity('[IMPORTANT] x').label, 'Important');
+  assert.equal(helpers.parseSeverity('[suggestion] x').label, 'Suggestion');
+  const missing = helpers.parseSeverity('[Missing test] cover the retry path');
+  assert.equal(missing.label, 'Missing test');
+  assert.equal(missing.id, 'missing-test');
+});
+
+test('parseSeverity returns an empty title for a bare tag line', () => {
+  const got = helpers.parseSeverity('[Critical]\n\nbody text');
+  assert.equal(got.title, '');
+  assert.equal(got.body, 'body text');
+});
+
+test('parseSeverity leaves untagged and unknown-tag comments alone', () => {
+  assert.equal(helpers.parseSeverity('just a comment'), null);
+  assert.equal(helpers.parseSeverity('[TODO] not a severity'), null);
+  assert.equal(helpers.parseSeverity('see [Critical] mid-sentence'), null);
+  assert.equal(helpers.parseSeverity(''), null);
+  assert.equal(helpers.parseSeverity(null), null);
+});
+
+test('parseSeverity keeps a single-line tagged comment intact', () => {
+  const got = helpers.parseSeverity('[Suggestion] rename this helper');
+  assert.equal(got.title, 'rename this helper');
+  assert.equal(got.body, '');
+});
