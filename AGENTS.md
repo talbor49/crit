@@ -77,6 +77,8 @@ crit fetch ...                # Fetch remote artefacts (see runFetch)
 crit comment <path>:<line[-end]> <body>         # Add a comment (no server needed)
 crit comment --reply-to <id> [--resolve] <body> # Reply to a comment
 crit comment --json [--file <path>] [--author <name>]  # Bulk add comments from JSON (stdin or --file; - = stdin)
+crit describe --title <text> [--body <text>|--file <path>|-] [--session <id>]  # Set the review header (title + markdown summary)
+crit describe --clear         # Remove the review header
 crit share <file> [file...]   # Share files to crit-web, print URL
 crit unpublish                # Remove shared review from crit-web
 crit config [--generate]      # Print resolved config (or starter template)

@@ -157,7 +157,25 @@ crit comment --output .crit src/auth.go:42 'comment'    # in-repo: .crit/reviews
 crit comment --clear   # remove the review file
 ```
 
-Comments are appended to the review file (stored in `~/.crit/reviews/`) and created automatically if it doesn't exist. Run `crit status` to see active review session IDs and paths. If multiple sessions match the same directory and branch, select one with `--session <id>` on `crit comment`, `crit comments`, `crit share`, `crit push`, or `crit pull`; an unqualified command fails instead of guessing.
+Comments are appended to the review file (stored in `~/.crit/reviews/`) and created automatically if it doesn't exist. Run `crit status` to see active review session IDs and paths. If multiple sessions match the same directory and branch, select one with `--session <id>` on `crit comment`, `crit comments`, `crit describe`, `crit share`, `crit push`, or `crit pull`; an unqualified command fails instead of guessing.
+
+A severity tag on the first line renders as a coloured badge and headline rather than literal text — `[Critical]` red, `[Important]` yellow, `[Suggestion]` green, `[Missing test]` blue:
+
+```bash
+crit comment src/auth.go:42 '[Critical] Nil deref when the tenant is missing
+
+Why it matters: every request on a fresh tenant panics before the handler runs.'
+```
+
+### Review header
+
+`crit describe` sets a title and markdown summary above the file list, so a reviewer opens the tab already knowing what the change is:
+
+```bash
+crit describe --title 'PR #412 — fix the auth token refresh race' --body '**What changed:** …'
+crit describe --title 'PR #412' --file summary.md      # or `-` to read stdin
+crit describe --clear                                  # remove it
+```
 
 ### Share for Async Review
 
@@ -292,7 +310,12 @@ After the first agent interaction, the comment becomes a **live thread**:
 - **Syntax highlighting.** Code blocks are highlighted and split per-line, so you can comment on individual lines inside a fence.
 - **Live file watching.** The browser reloads automatically when the source file changes.
 - **Dark/light/system theme.** Three-button pill in the header, persisted to localStorage.
+- **Community palettes.** Settings → Display → Palette ships Catppuccin Mocha & Latte, Dracula, Nord, Gruvbox Dark, and Rosé Pine alongside the built-in light and dark. Adding your own is one CSS block — see [THEMES.md](THEMES.md).
 - **Configurable code font.** Code-review Settings → Display → Code font lists coding/monospace fonts detected by the local Crit daemon, plus Default, System monospace, and a custom `font-family` fallback. Applies to code and diffs, and persists across sessions.
+- **Configurable UI font.** Settings → Display → UI font switches the chrome, comments, and file tree between Inter, System UI, a humanist sans, a serif, monospace, or any `font-family` you type.
+- **Review header.** `crit describe --title "…" --body "…"` puts a title and a markdown summary above the file list, so a reviewer opens the tab already knowing what the change is. Agents can pipe one in with `crit describe --title "…" -`.
+- **Severity-tagged comments.** A comment starting with `[Critical]`, `[Important]`, `[Suggestion]`, or `[Missing test]` renders as a coloured badge and headline instead of literal text, and tints its card red / yellow / green / blue.
+- **One-click triage.** Every comment's reply box has **Fix** and **Skip** buttons that post that reply and jump to the next comment — for working through a queue of agent findings without typing.
 - **Local by default.** Server binds to `127.0.0.1`. Your files stay on your machine unless you explicitly share. Non-loopback listen hosts and `public_url` require `--allow-unauthenticated-network` (or `CRIT_ALLOW_UNAUTHENTICATED_NETWORK=1`) because Crit has no network authentication — prefer SSH forwarding, Tailscale Serve to loopback, or Docker `-p 127.0.0.1:…`.
 - **Collapsing generated files.** Honors `linguist-generated` in `.gitattributes` — matching files appear collapsed by default.
 - **No analytics or tracking.** Crit collects zero telemetry. No usage stats, no crash reports, no phone-home. If we ever add anonymous usage statistics in the future, they will be explicitly opt-in.
