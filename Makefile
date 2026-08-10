@@ -2,9 +2,15 @@ VERSION ?= dev
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 DATE ?= $(shell date -u +%Y-%m-%d)
 LDFLAGS := -s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)
+PREFIX ?= $(HOME)/.local
 
 build: generate
 	go build -ldflags "$(LDFLAGS)" -o crit ./cmd/crit
+
+install: build
+	install -d $(PREFIX)/bin
+	install -m 755 crit $(PREFIX)/bin/crit
+	@echo "installed $(PREFIX)/bin/crit"
 
 generate:
 	go generate ./...
@@ -74,4 +80,4 @@ test-preview: build
 	@echo "Starting preview mode with sample page..."
 	./crit preview test/preview-sample/index.html
 
-.PHONY: build build-all generate verify-generate update-deps test test-frontend setup-hooks clean test-diff test-live-cdp e2e-roundtrip e2e-gitlab-roundtrip test-daemon test-plan-daemon e2e e2e-failed e2e-report e2e-live-utils test-preview
+.PHONY: build install build-all generate verify-generate update-deps test test-frontend setup-hooks clean test-diff test-live-cdp e2e-roundtrip e2e-gitlab-roundtrip test-daemon test-plan-daemon e2e e2e-failed e2e-report e2e-live-utils test-preview
