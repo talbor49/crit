@@ -299,13 +299,14 @@ Reviewing a Go diff, powered by [gopls](https://pkg.go.dev/golang.org/x/tools/go
    curl -s localhost:<port>/api/config | grep lsp_available   # → "lsp_available": true
    ```
 
-   If it reports `false`: gopls is not on the PATH crit was started from, `lsp` is disabled in config, the session has no repo root (plain files mode), or a range/PR review is active (`--range` / `--pr` — the diff shows content at a fixed SHA, while LSP reads the working tree, so answers could silently mismatch).
+   If it reports `false`: gopls is not on the PATH crit was started from, `lsp` is disabled in config, or the session has no repo root (plain files mode).
 
 Notes:
 
 - gopls starts **lazily** on the first hover and is stopped after 3 minutes of inactivity — running crit in many worktrees at once only keeps language servers alive for reviews you're actively hovering.
 - The very first hover after a cold start can take a few seconds while gopls loads the workspace (the tooltip shows a loading placeholder).
 - Requests are read-only (`hover`, `definition`, `references`); crit never asks a language server to edit anything.
+- **Range and PR reviews (`--range` / `--pr`) work per file.** Those views render a file at a fixed SHA while gopls reads it from disk, so crit compares the two and only answers for files where they are byte-identical. Edit a file after opening the review and it goes quiet for that file until you revert or restart — its untouched neighbours keep working, and a go-to-definition target in a drifted file opens the peek popup (which reads the working tree) instead of jumping to a diff line that may no longer correspond.
 - Definition targets are only read from your repo, `GOROOT`, and `GOMODCACHE`.
 
 ### Everything else

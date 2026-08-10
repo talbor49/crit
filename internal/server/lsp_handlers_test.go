@@ -14,6 +14,7 @@ import (
 
 	"github.com/tomasz-tomczyk/crit/internal/config"
 	"github.com/tomasz-tomczyk/crit/internal/lsp"
+	"github.com/tomasz-tomczyk/crit/internal/vcs"
 )
 
 // fakeLSPProvider implements lspProvider without spawning gopls.
@@ -27,10 +28,27 @@ type fakeLSPProvider struct {
 	goroot        string
 	gomodcache    string
 	shutdowns     int
+	hoverCalls    int
 }
 
 func (f *fakeLSPProvider) Hover(string, int, int) (string, error) {
+	f.hoverCalls++
 	return f.hoverContents, f.hoverErr
+}
+
+// fakeShaVCS answers ReadFileAtSHA so range-focus tests can control what the
+// diff is said to render, without a real repository.
+type fakeShaVCS struct {
+	vcs.VCS
+	contents map[string]string
+}
+
+func (f *fakeShaVCS) ReadFileAtSHA(_ string, path, _ string) ([]byte, error) {
+	body, ok := f.contents[path]
+	if !ok {
+		return nil, os.ErrNotExist
+	}
+	return []byte(body), nil
 }
 
 func (f *fakeLSPProvider) Definition(string, int, int) ([]lsp.Location, error) {
@@ -140,16 +158,78 @@ func TestLSPDisabledByConfig(t *testing.T) {
 	}
 }
 
-func TestLSPUnavailableUnderRangeFocus(t *testing.T) {
+func TestLSPUnderRangeFocusMatchesRenderedContent(t *testing.T) {
 	fake := &fakeLSPProvider{hoverContents: "doc"}
 	srv, sess := newLSPTestServer(t, fake)
+	onDisk, err := os.ReadFile(filepath.Join(sess.RepoRoot, "main.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sess.VCS = &fakeShaVCS{contents: map[string]string{"main.go": string(onDisk)}}
 	sess.Focus = Focus{Kind: FocusRange, BaseSHA: "b", HeadSHA: "h"}
 
-	if w := doLSPRequest(t, srv, "/api/lsp/hover?path=main.go&line=1&char=0"); w.Code != http.StatusNotFound {
-		t.Errorf("status = %d, want 404 under range focus", w.Code)
+	// The feature stays offered: a clean checkout of the range's head is the
+	// common `crit --range <merge-base>..HEAD` case.
+	if !srv.lspAvailable() {
+		t.Error("lspAvailable must be true under range focus when gopls is present")
 	}
-	if srv.lspAvailable() {
-		t.Error("lspAvailable must be false under range/PR focus (LSP reads the working tree, not Focus.HeadSHA)")
+	w := doLSPRequest(t, srv, "/api/lsp/hover?path=main.go&line=1&char=0")
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var body struct {
+		Contents string `json:"contents"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Contents != "doc" {
+		t.Errorf("contents = %q, want the hover doc", body.Contents)
+	}
+}
+
+// The reviewer edited a file after opening the range review: the diff still
+// renders it at HeadSHA, so a position would resolve against content they
+// cannot see. Refuse — but as an empty success, so the client's failure
+// breaker does not take the feature down for the untouched files too.
+func TestLSPUnderRangeFocusRefusesDriftedFile(t *testing.T) {
+	fake := &fakeLSPProvider{hoverContents: "doc"}
+	srv, sess := newLSPTestServer(t, fake)
+	sess.VCS = &fakeShaVCS{contents: map[string]string{"main.go": "package main\n\n// different\n"}}
+	sess.Focus = Focus{Kind: FocusRange, BaseSHA: "b", HeadSHA: "h"}
+
+	w := doLSPRequest(t, srv, "/api/lsp/hover?path=main.go&line=1&char=0")
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (empty result, not an error)", w.Code)
+	}
+	var body struct {
+		Contents    string `json:"contents"`
+		Unavailable bool   `json:"unavailable"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Contents != "" || !body.Unavailable {
+		t.Errorf("got contents=%q unavailable=%v; want an empty unavailable result", body.Contents, body.Unavailable)
+	}
+	if fake.hoverCalls != 0 {
+		t.Errorf("gopls was queried %d times for a drifted file; want 0", fake.hoverCalls)
+	}
+}
+
+// Without a VCS (or a head SHA) there is no way to prove the render matches,
+// so range focus stays closed.
+func TestLSPUnderRangeFocusRefusesWithoutProof(t *testing.T) {
+	fake := &fakeLSPProvider{hoverContents: "doc"}
+	srv, sess := newLSPTestServer(t, fake)
+	sess.Focus = Focus{Kind: FocusRange, BaseSHA: "b", HeadSHA: ""}
+
+	w := doLSPRequest(t, srv, "/api/lsp/hover?path=main.go&line=1&char=0")
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), `"unavailable":true`) {
+		t.Errorf("body = %s; want an unavailable result", w.Body.String())
 	}
 }
 

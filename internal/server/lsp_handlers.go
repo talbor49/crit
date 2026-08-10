@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net/http"
 	"os"
@@ -71,14 +72,11 @@ func (s *Server) lspAvailable() bool {
 	if sess == nil || sess.RepoRoot == "" {
 		return false
 	}
-	// Range/PR focus renders file content at Focus.HeadSHA, but the LSP
-	// endpoints read the working tree — positions could silently resolve
-	// against different content than the reviewer sees. Disable rather than
-	// answer wrong. (Feeding SHA content to gopls as a didOpen overlay is a
-	// possible future improvement.)
-	if sess.Focus.Kind == FocusRange {
-		return false
-	}
+	// Range/PR focus renders file content at Focus.HeadSHA while the LSP
+	// endpoints read the working tree. That is only safe per file — see
+	// rangeContentMatches, which every request consults. The feature is
+	// still offered here so a reviewer on a clean checkout of the range's
+	// head (the common `crit --range <merge-base>..HEAD` case) gets it.
 	if s.lsp.binaryAvailable != nil {
 		return s.lsp.binaryAvailable()
 	}
@@ -168,7 +166,48 @@ func (s *Server) parseLSPParams(w http.ResponseWriter, r *http.Request) (absPath
 		http.Error(w, "Access denied", http.StatusForbidden)
 		return "", 0, 0, false
 	}
+	if !s.rangeContentMatches(s.session.Load(), cleaned) {
+		// 200 with an empty result, not an error: the client's failure breaker
+		// would otherwise trip on a file the reviewer simply edited, and take
+		// the feature down for the clean files too.
+		writeJSON(w, lspUnavailableResponse())
+		return "", 0, 0, false
+	}
 	return absPath, line - 1, char, true
+}
+
+// lspUnavailableResponse is the empty-but-successful body returned when the
+// reviewer's working tree has drifted from the content the diff renders. It
+// satisfies every /api/lsp/* response shape at once.
+func lspUnavailableResponse() map[string]any {
+	return map[string]any{"contents": "", "locations": []lspLocationResponse{}, "unavailable": true}
+}
+
+// rangeContentMatches reports whether the LSP may answer for relPath.
+//
+// Outside range focus the diff renders the working tree, so the answer is
+// always yes. Under range focus the diff renders relPath at Focus.HeadSHA
+// while gopls reads it from disk; answering when those differ would resolve
+// a position against content the reviewer cannot see. Comparing the bytes
+// directly is stricter than comparing HeadSHA to HEAD — it stays correct for
+// a file that is identical across the two, and refuses one that is not even
+// when the SHAs happen to line up.
+func (s *Server) rangeContentMatches(sess *Session, relPath string) bool {
+	if sess == nil || sess.Focus.Kind != FocusRange {
+		return true
+	}
+	if sess.Focus.HeadSHA == "" || sess.VCS == nil {
+		return false
+	}
+	onDisk, err := os.ReadFile(filepath.Join(sess.RepoRoot, filepath.FromSlash(relPath)))
+	if err != nil {
+		return false
+	}
+	atHead, err := sess.VCS.ReadFileAtSHA(sess.Focus.HeadSHA, relPath, sess.RepoRoot)
+	if err != nil {
+		return false
+	}
+	return bytes.Equal(onDisk, atHead)
 }
 
 // rootKind classifies which allowed root contains an LSP path.
@@ -382,7 +421,10 @@ func (s *Server) resolveLocation(sess *Session, loc lsp.Location, goroot, gomodc
 		out.Path = relSlash
 		out.DisplayPath = relSlash
 		out.InRepo = true
-		out.InSession = sess.FileByPath(relSlash) != nil
+		// A jump lands on a rendered diff line; only offer it when that render
+		// matches the file gopls resolved against. Otherwise fall back to the
+		// peek popup, which reads the working tree and is self-consistent.
+		out.InSession = sess.FileByPath(relSlash) != nil && s.rangeContentMatches(sess, relSlash)
 	} else {
 		out.Path = loc.Path
 		out.DisplayPath = displayPathOutsideRepo(loc.Path, kind, goroot, gomodcache)
