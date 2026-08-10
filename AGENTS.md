@@ -142,7 +142,7 @@ make e2e-report                                       # View HTML report with sc
 
 ### Projects
 
-Nine Playwright projects. Test naming convention determines which project runs which file:
+Eight Playwright projects. Test naming convention determines which project runs which file:
 
 | Project | Port | Fixture | Test glob |
 | --- | --- | --- | --- |
@@ -154,7 +154,6 @@ Nine Playwright projects. Test naming convention determines which project runs w
 | `multi-file-mode` | 3127 | `setup-fixtures-multifile.sh` (code + markdown files) | `*.multifile.spec.ts` |
 | `range-mode` | 3128 | `setup-fixtures-range-mode.sh` (`--range A..B` stacked git) | `*.rangemode.spec.ts` |
 | `live-mode` | 3129 | `setup-fixtures-livemode.sh` (Go upstream + crit live) | `*.livemode.spec.ts` |
-| `share-transport` | 3132 (stub crit-web on 3133) | `setup-fixtures-sharetransport.sh` (file mode + stub crit-web) | `*.sharetransport.spec.ts` |
 
 The `mobile` project shares the git-mode fixture port. In `run.sh` it runs strictly after `git-mode` finishes so the two don't race on shared comment state (both projects `DELETE /api/comments` in `beforeEach`).
 
