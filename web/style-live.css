@@ -26,7 +26,6 @@
 .crit-mode-live #diffModeToggle,
 .crit-mode-live #prToggle,
 .crit-mode-live #tocToggle,
-.crit-mode-live #updateBtn { display: none !important; }
 
 /* The comments-panel survives but is shown for live-mode comments.
    The base stylesheet hides .comments-panel for code-review boot via an

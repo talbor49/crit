@@ -343,30 +343,6 @@
   let uiState = 'reviewing';
   let waitingNotApproved = false;
   let hiddenUnresolved = 0;
-  let pendingUpdates = [];
-  let pendingUpdatesVersion = '';
-
-  // Returns true if at least one pending update entry has not been dismissed.
-  // Brew dismiss is keyed by version; integration dismiss is keyed per-agent
-  // by content hash (so re-prompts when we ship a new template).
-  function hasActivePendingUpdates() {
-    if (!pendingUpdates.length) return false;
-    const brewDismissed = getSetting('updatesDismissed', '');
-    const intDismissed = getSetting('dismissedIntegrations', {}) || {};
-    for (let i = 0; i < pendingUpdates.length; i++) {
-      const u = pendingUpdates[i];
-      if (u.kind === 'brew') {
-        if (brewDismissed !== pendingUpdatesVersion) return true;
-      } else if (u.kind === 'integration') {
-        if (!u.hash || intDismissed[u.agent] !== u.hash) return true;
-      } else if (u.kind === 'missing-integration') {
-        if (!intDismissed['missing:' + u.agent]) return true;
-      } else {
-        return true;
-      }
-    }
-    return false;
-  }
 
   let reviewComments = []; // review-level (general) comments
   let reviewCommentFormActive = false; // is the review comment form open?
@@ -877,48 +853,6 @@
       project_prompt_content_hash: configRes.project_prompt_content_hash || '',
     };
     window.crit.shared.applyProjectPromptTrustUI(promptTrustConfig, document.getElementById('finishBtn'));
-
-    // Update notifications (brew upgrade + stale integrations)
-    pendingUpdates = [];
-    const hasBrew = configRes.latest_version && configRes.version && configRes.latest_version !== configRes.version;
-    if (hasBrew) {
-      pendingUpdates.push({
-        kind: 'brew',
-        version: configRes.latest_version,
-        label: 'Crit ' + configRes.latest_version + ' available',
-        labelUrl: 'https://github.com/tomasz-tomczyk/crit/releases/tag/v' + configRes.latest_version,
-        hint: 'brew update && brew upgrade crit'
-      });
-    }
-    if (configRes.stale_integrations) {
-      configRes.stale_integrations.forEach(function(si) {
-        // Capitalize agent name for display
-        const name = si.agent.replace(/\b\w/g, function(c) { return c.toUpperCase(); }).replace(/-/g, ' ');
-        pendingUpdates.push({
-          kind: 'integration',
-          agent: si.agent,
-          hash: si.hash || '',
-          label: name + ' plugin outdated',
-          hint: si.hint
-        });
-      });
-    }
-    if (configRes.missing_integrations) {
-      configRes.missing_integrations.forEach(function(agent) {
-        const name = agent.replace(/\b\w/g, function(c) { return c.toUpperCase(); }).replace(/-/g, ' ');
-        pendingUpdates.push({
-          kind: 'missing-integration',
-          agent: agent,
-          label: name + ' detected — install integration',
-          hint: 'crit install ' + agent
-        });
-      });
-    }
-
-    pendingUpdatesVersion = configRes.latest_version || configRes.version || '';
-    if (hasActivePendingUpdates()) {
-      document.getElementById('updateBtn').style.display = '';
-    }
 
     // Header context: branch name in git mode, filename in single-file file mode
     if (session.mode === 'git' && session.branch) {
@@ -8284,11 +8218,6 @@
     });
   }
 
-  // ===== Update Button =====
-  document.getElementById('updateBtn').addEventListener('click', function() {
-    openSettingsPanel('settings');
-  });
-
   // ===== Diff Mode Toggle (Split / Unified) =====
   document.querySelectorAll('#diffModeToggle .toggle-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -9348,7 +9277,6 @@
         getHideResolved: isHideResolved,
         setHideResolved: setHideResolved,
         onHideResolvedChange: function () { refreshHideResolvedView(); },
-        hasActivePendingUpdates: hasActivePendingUpdates,
         announceCopy: announceCopy,
         escape: escapeHtml,
       };
@@ -9566,8 +9494,6 @@
       dismissBtn.addEventListener('click', function() {
         const version = dismissBtn.dataset.dismissVersion || '';
         setSetting('updatesDismissed', version);
-        const updateBtn = document.getElementById('updateBtn');
-        if (updateBtn && !hasActivePendingUpdates()) updateBtn.style.display = 'none';
         const body = pane.querySelector('#updateCardBody');
         if (body) {
           dismissBtn.outerHTML = '<span class="config-card-dismissed" id="updateDismissedNote">Dismissed — will remind you on next version</span>';
@@ -9585,8 +9511,6 @@
         const map = getSetting('dismissedIntegrations', {}) || {};
         map[agent] = hash;
         setSetting('dismissedIntegrations', map);
-        const updateBtn = document.getElementById('updateBtn');
-        if (updateBtn && !hasActivePendingUpdates()) updateBtn.style.display = 'none';
         integrationDismissBtn.outerHTML = '<span class="config-card-dismissed" id="integrationDismissedNote">Dismissed — will remind you when this integration changes</span>';
       });
     }

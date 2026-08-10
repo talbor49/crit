@@ -25,7 +25,6 @@
 //                      getIgnoreWhitespace(),                // required if show.ignoreWhitespace
 //                      setIgnoreWhitespace(v),               // required if show.ignoreWhitespace
 //                      onIgnoreWhitespaceChange(),           // optional, called after toggle (reloads diffs)
-//                      hasActivePendingUpdates(),            // optional, default false
 //                      announceCopy(),                       // optional
 //                    }
 
@@ -700,9 +699,6 @@
       dismissBtn.addEventListener('click', function () {
         var version = dismissBtn.dataset.dismissVersion || '';
         setSetting('updatesDismissed', version);
-        var updateBtn = document.getElementById('updateBtn');
-        var pending = hooks.hasActivePendingUpdates ? !!hooks.hasActivePendingUpdates() : false;
-        if (updateBtn && !pending) updateBtn.style.display = 'none';
         var body = pane.querySelector('#updateCardBody');
         if (body) {
           dismissBtn.outerHTML = '<span class="config-card-dismissed" id="updateDismissedNote">Dismissed — will remind you on next version</span>';
@@ -719,9 +715,6 @@
         var map = getSetting('dismissedIntegrations', {}) || {};
         map[agent] = hash;
         setSetting('dismissedIntegrations', map);
-        var updateBtn = document.getElementById('updateBtn');
-        var pending = hooks.hasActivePendingUpdates ? !!hooks.hasActivePendingUpdates() : false;
-        if (updateBtn && !pending) updateBtn.style.display = 'none';
         integrationDismissBtn.outerHTML = '<span class="config-card-dismissed" id="integrationDismissedNote">Dismissed — will remind you when this integration changes</span>';
       });
     }
@@ -733,9 +726,6 @@
         var map = getSetting('dismissedIntegrations', {}) || {};
         map['missing:' + agent] = true;
         setSetting('dismissedIntegrations', map);
-        var updateBtn = document.getElementById('updateBtn');
-        var pending = hooks.hasActivePendingUpdates ? !!hooks.hasActivePendingUpdates() : false;
-        if (updateBtn && !pending) updateBtn.style.display = 'none';
         var card = btn.closest('.config-card');
         if (card) card.remove();
       });

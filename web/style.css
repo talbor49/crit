@@ -292,38 +292,6 @@ body {
   color: var(--crit-green);
 }
 
-/* ===== Update Button ===== */
-.update-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--crit-green);
-  font-size: 13px;
-  padding: 5px 6px;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-.update-btn svg {
-  width: 16px;
-  height: 16px;
-  display: block;
-  flex-shrink: 0;
-}
-.update-btn:hover {
-  color: var(--crit-green);
-}
-.update-btn-label {
-  font-size: 12px;
-  font-weight: 500;
-}
-@media (max-width: 860px) {
-  .update-btn-label { display: none; }
-  .update-btn { padding: 5px; }
-}
-
 .header-right {
   display: flex;
   align-items: center;
@@ -3048,7 +3016,6 @@ body.hide-resolved .comment-block:not(.panel-comment-block):has(.resolved-card) 
   .base-branch-picker { display: none; }
   .file-tree-panel { display: none; }
   .sidebar-resize-handle { display: none !important; }
-  #updateBtn { display: none !important; }
   .file-header { padding: 8px 12px; }
   .file-header-toggle { display: none; }
   .change-nav { display: none; }
@@ -5603,10 +5570,6 @@ body.sidebar-resizing * {
   }
   .theme-toggle {
     padding: 12px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  .update-btn {
     min-width: 44px;
     min-height: 44px;
   }
