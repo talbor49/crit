@@ -36,7 +36,13 @@ type Config struct {
 	// NotifyOnRoundReady controls desktop notifications when a review round
 	// becomes ready for the human. Defaults to false when unset (opt-in).
 	NotifyOnRoundReady *bool `json:"notify_on_round_ready,omitempty"`
-	DisableStats       bool  `json:"disable_stats,omitempty"`
+	// LSP controls language-server features (hover, go-to-definition,
+	// find-references) in the review UI. Defaults to true when unset; features
+	// only activate when the language server binary (gopls) is on PATH.
+	// Mergeable from project config — the spawned binary name is fixed, so a
+	// repo cannot hijack the command.
+	LSP          *bool `json:"lsp,omitempty"`
+	DisableStats bool  `json:"disable_stats,omitempty"`
 	// CloseOnApproveAfterMs, when set, auto-closes the review tab this many
 	// milliseconds after an Approve. Global-only (like open_cmd/agent_cmd) so
 	// a project repo cannot force tabs to close. Nil means disabled; the CLI
@@ -56,6 +62,15 @@ type Config struct {
 	// template text. Project-level hooks are gated by the same trust flow as
 	// project prompts (they run arbitrary code).
 	Hooks map[string]string `json:"hooks,omitempty"`
+}
+
+// LSPEnabled returns whether language-server features (hover, definition,
+// references) are enabled. Defaults to true if not explicitly set.
+func (c Config) LSPEnabled() bool {
+	if c.LSP != nil {
+		return *c.LSP
+	}
+	return true
 }
 
 // CleanupOnApproveEnabled returns whether review files should be cleaned up
@@ -124,6 +139,7 @@ func defaultConfig() generatedConfig {
 		AgentCmd:           "",
 		PlanApproveMode:    "",
 		CleanupOnApprove:   true,
+		LSP:                true,
 		NotifyOnRoundReady: false,
 		VCS:                "",
 		Forge:              "auto",
@@ -152,6 +168,7 @@ type generatedConfig struct {
 	AgentCmd           string            `json:"agent_cmd"`
 	PlanApproveMode    string            `json:"plan_approve_mode"`
 	CleanupOnApprove   bool              `json:"cleanup_on_approve"`
+	LSP                bool              `json:"lsp"`
 	NotifyOnRoundReady bool              `json:"notify_on_round_ready"`
 	VCS                string            `json:"vcs"`
 	Forge              string            `json:"forge"`
@@ -226,6 +243,8 @@ func LoadConfigFile(path string) (Config, ConfigPresence, error) {
 // Non-zero project values override global. Bool fields use presence tracking
 // so that project config `no_open: false` can override global `no_open: true`.
 // Ignore patterns are unioned.
+//
+//nolint:gocyclo // a flat sequence of independent per-field merges, not branching logic
 func mergeConfigs(global, project Config, projectPresence ConfigPresence) Config {
 	merged := global
 	if project.Port != 0 {
@@ -259,6 +278,10 @@ func mergeConfigs(global, project Config, projectPresence ConfigPresence) Config
 	}
 	if projectPresence.NoUpdateCheck {
 		merged.NoUpdateCheck = project.NoUpdateCheck
+	}
+	// LSP carries presence implicitly (*bool, nil = unset).
+	if project.LSP != nil {
+		merged.LSP = project.LSP
 	}
 	if projectPresence.CleanupOnApprove {
 		merged.CleanupOnApprove = project.CleanupOnApprove
