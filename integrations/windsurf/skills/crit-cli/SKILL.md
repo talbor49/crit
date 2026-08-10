@@ -1,6 +1,6 @@
 ---
 name: crit-cli
-description: Use when an agent needs to author or reply to crit inline comments programmatically (including multi-agent workflows commenting on shared code/plans/docs/proposals), sync a crit review to or from a GitHub PR or GitLab MR, or read/interpret a crit review JSON file. Covers crit comment, crit pull, crit push, review file format, and resolution workflow. Not for invoking an interactive review loop — that's the `/crit` workflow.
+description: Use when an agent needs to author or reply to crit inline comments programmatically (including multi-agent workflows commenting on shared code/plans/docs/proposals), sync a crit review to or from a GitHub PR or GitLab MR, or read/interpret a crit review JSON file. Covers crit comment, crit describe, crit pull, crit push, review file format, severity tags, and resolution workflow. Not for invoking an interactive review loop — that's the `/crit` workflow.
 ---
 
 # Crit CLI Reference
@@ -30,6 +30,50 @@ crit comments [path]     # explicit review.json or .crit directory
 ```
 
 Review-level comments are listed first — easy to miss in raw `review.json`. Uses the same review resolution as `crit comment` (`--output`, `--plan`, daemon session).
+
+## Review header (`crit describe`)
+
+Give the reviewer a title and summary above the file list so they know what they are looking at
+before they scroll. Set it right after the review opens.
+
+```bash
+crit describe --title 'PR #412 — fix the auth token refresh race' \
+  --body '**What changed:** the refresh path now holds the mutex for the whole round trip.
+
+**Review focus**
+- `internal/auth/refresh.go` — the lock now spans a network call'
+
+crit describe --title 'PR #412' --file summary.md   # body from a file ("-" reads stdin)
+crit describe --clear                               # remove it
+```
+
+The body is markdown. Add `--session <id>` when several sessions match (same rule as `crit comment`).
+Setting it on a live session updates the open tab immediately — no reload.
+
+## Severity tags on comments
+
+A comment whose **first line** starts with a severity tag renders as a coloured badge plus a bold
+headline, with the tag stripped from the body:
+
+| Tag | Colour |
+|---|---|
+| `[Critical]` | red |
+| `[Important]` | yellow |
+| `[Suggestion]` | green |
+| `[Missing test]` | blue |
+
+```bash
+crit comment src/auth.go:42 '[Critical] Nil deref when the tenant is missing
+
+Why it matters: every request on a fresh tenant panics before the handler runs.'
+```
+
+Put the claim on the tag's line — that line becomes the headline. Untagged comments render normally.
+
+**Don't write "Reply `fix` to apply, `skip` to decline" into comment bodies.** Every comment has
+**Fix** and **Skip** buttons in its reply box; one click posts that reply and advances to the next
+comment. So a bare `fix` or `skip` reply is a deliberate decision, not a truncated one — treat
+`fix` as accept and `skip` as decline.
 
 ## Multiple active sessions
 
