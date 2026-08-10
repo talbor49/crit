@@ -264,6 +264,60 @@
     return options;
   }
 
+  function uiFontOptions() {
+    return (sharedApi().UI_FONT_PRESETS || []).slice();
+  }
+
+  // Wires one "<preset select> + Custom… <text input>" font row. opts.apply
+  // persists and applies the stack, returning '' when the value was rejected.
+  function wireFontSelect(pane, opts) {
+    var select = pane.querySelector('#' + opts.selectId);
+    var customRow = pane.querySelector('#' + opts.customRowId);
+    var customInput = pane.querySelector('#' + opts.customInputId);
+
+    function markInvalid(invalid) {
+      if (!customInput) return;
+      customInput.classList.toggle('is-invalid', invalid);
+      customInput.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+    }
+
+    if (select) {
+      select.addEventListener('change', function () {
+        var id = select.value;
+        if (id === 'custom') {
+          if (customRow) customRow.hidden = false;
+          if (customInput) {
+            customInput.focus();
+            // An empty custom box means "no override yet" — leave the current
+            // font alone until the user types something.
+            if (customInput.value.trim()) opts.apply(customInput.value);
+          }
+          return;
+        }
+        if (customRow) customRow.hidden = true;
+        markInvalid(false);
+        var preset = opts.presets.filter(function (p) { return p.id === id; })[0];
+        opts.apply(preset ? preset.stack : '');
+      });
+    }
+
+    if (customInput) {
+      customInput.addEventListener('change', function () {
+        var raw = customInput.value;
+        var rejected = !!raw.trim() && !opts.apply(raw);
+        markInvalid(rejected);
+        if (rejected) {
+          var s = sharedApi();
+          if (s.showToast) s.showToast('Not a valid font-family value — using the default.', { kind: 'error' });
+        }
+      });
+    }
+  }
+
+  function themeOptions() {
+    return (sharedApi().THEMES || []).slice();
+  }
+
   function getSetting(key, fallback) {
     var s = window.crit && window.crit.shared;
     return s && s.getSetting ? s.getSetting(key, fallback) : fallback;
@@ -277,6 +331,9 @@
     var indicator = pane.querySelector('#' + indicatorId);
     if (!indicator) return;
     var idx = values.indexOf(current);
+    // A community palette is outside the pill's three values — hide the
+    // indicator rather than leaving it parked on a button that isn't active.
+    indicator.style.opacity = idx >= 0 ? '' : '0';
     if (idx >= 0) {
       indicator.style.left = (idx * (100 / values.length)) + '%';
       indicator.style.width = (100 / values.length) + '%';
@@ -324,6 +381,41 @@
         '" title="' + label + ' theme">' + THEME_ICONS[theme] + '</button>';
     });
     html += '</div></div>';
+
+    // Palette row — community themes contributed via theme.css (see THEMES.md).
+    // Picking one overrides the System/Light/Dark pill above; picking a built-in
+    // from this list hands control back to the pill.
+    html += '<div class="settings-display-row">';
+    html += '<span class="settings-display-label">Palette</span>';
+    html += '<select class="settings-select" id="themePaletteSelect" aria-label="Colour palette">';
+    themeOptions().forEach(function (t) {
+      html += '<option value="' + esc(t.id) + '"' + (t.id === currentTheme ? ' selected' : '') + '>' + esc(t.label) + '</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+
+    // UI font row — --crit-font-body (chrome, comments, file tree).
+    var uiFontPresets = uiFontOptions();
+    var currentUIFont = getSetting('uiFont', '');
+    var matchedUIPreset = null;
+    uiFontPresets.forEach(function (p) {
+      if (!matchedUIPreset && p.stack === currentUIFont) matchedUIPreset = p;
+    });
+    var selectedUIFontId = matchedUIPreset ? matchedUIPreset.id : 'custom';
+    html += '<div class="settings-display-row">';
+    html += '<span class="settings-display-label">UI font</span>';
+    html += '<select class="settings-select" id="uiFontSelect" aria-label="UI font">';
+    uiFontPresets.forEach(function (p) {
+      html += '<option value="' + esc(p.id) + '"' + (p.id === selectedUIFontId ? ' selected' : '') + '>' + esc(p.label) + '</option>';
+    });
+    html += '<option value="custom"' + (selectedUIFontId === 'custom' ? ' selected' : '') + '>Custom…</option>';
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="settings-display-row" id="uiFontCustomRow"' + (selectedUIFontId === 'custom' ? '' : ' hidden') + '>';
+    html += '<label class="settings-display-label settings-display-label--sub" for="uiFontCustomInput">Custom font-family</label>';
+    html += '<input type="text" class="settings-text-input" id="uiFontCustomInput" spellcheck="false" autocomplete="off"'
+      + ' maxlength="256" placeholder="\'IBM Plex Sans\', sans-serif" value="' + esc(selectedUIFontId === 'custom' ? currentUIFont : '') + '">';
+    html += '</div>';
 
     if (opts.mode !== 'live') {
       // --crit-font-mono drives code and diffs in code-review mode. The server
@@ -565,66 +657,52 @@
     pane.innerHTML = html;
 
     // ---------- Wire-up ----------
-    pane.querySelectorAll('[data-settings-theme]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var t = btn.dataset.settingsTheme;
-        if (hooks.applyTheme) hooks.applyTheme(t);
-        else { setSetting('theme', t); var s = window.crit && window.crit.shared; if (s && s.applyThemeFromCookie) s.applyThemeFromCookie(); }
-        pane.querySelectorAll('[data-settings-theme]').forEach(function (b) {
-          var on = b.dataset.settingsTheme === t;
-          b.classList.toggle('active', on);
-          b.setAttribute('aria-pressed', String(on));
-        });
-        updatePillIndicator(pane, 'settingsThemeIndicator', ['system', 'light', 'dark'], t);
+    // The pill and the palette select are two views of one setting, so both
+    // route through selectTheme and then re-sync the other control.
+    var paletteSelect = pane.querySelector('#themePaletteSelect');
+    function selectTheme(t) {
+      if (hooks.applyTheme) hooks.applyTheme(t);
+      else { setSetting('theme', t); var s = window.crit && window.crit.shared; if (s && s.applyThemeFromCookie) s.applyThemeFromCookie(); }
+      pane.querySelectorAll('[data-settings-theme]').forEach(function (b) {
+        var on = b.dataset.settingsTheme === t;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
       });
+      if (paletteSelect && paletteSelect.value !== t) paletteSelect.value = t;
+      updatePillIndicator(pane, 'settingsThemeIndicator', ['system', 'light', 'dark'], t);
+    }
+    pane.querySelectorAll('[data-settings-theme]').forEach(function (btn) {
+      btn.addEventListener('click', function () { selectTheme(btn.dataset.settingsTheme); });
     });
+    if (paletteSelect) {
+      paletteSelect.addEventListener('change', function () { selectTheme(paletteSelect.value); });
+    }
     updatePillIndicator(pane, 'settingsThemeIndicator', ['system', 'light', 'dark'], currentTheme);
 
-    var fontSelect = pane.querySelector('#codeFontSelect');
-    var fontCustomRow = pane.querySelector('#codeFontCustomRow');
-    var fontCustomInput = pane.querySelector('#codeFontCustomInput');
-    // Applied through the shared helper rather than a hook: no mode needs to do
-    // anything extra when the code font changes, unlike theme (mermaid re-init)
+    // Fonts apply through the shared helpers rather than a hook: no mode needs
+    // to do anything extra when a font changes, unlike theme (mermaid re-init)
     // or width (layout attribute).
-    function applyCodeFont(stack) {
-      var api = sharedApi();
-      return api.setCodeFont ? api.setCodeFont(stack) : '';
-    }
-    function markInvalidFont(invalid) {
-      if (!fontCustomInput) return;
-      fontCustomInput.classList.toggle('is-invalid', invalid);
-      fontCustomInput.setAttribute('aria-invalid', invalid ? 'true' : 'false');
-    }
-    if (fontSelect) {
-      fontSelect.addEventListener('change', function () {
-        var id = fontSelect.value;
-        if (id === 'custom') {
-          if (fontCustomRow) fontCustomRow.hidden = false;
-          if (fontCustomInput) {
-            fontCustomInput.focus();
-            // An empty custom box means "no override yet" — leave the current
-            // font alone until the user types something.
-            if (fontCustomInput.value.trim()) applyCodeFont(fontCustomInput.value);
-          }
-          return;
-        }
-        if (fontCustomRow) fontCustomRow.hidden = true;
-        markInvalidFont(false);
-        var preset = codeFontOptions(cfg).filter(function (p) { return p.id === id; })[0];
-        applyCodeFont(preset ? preset.stack : '');
-      });
-    }
-    if (fontCustomInput) {
-      fontCustomInput.addEventListener('change', function () {
-        var raw = fontCustomInput.value;
-        var rejected = !!raw.trim() && !applyCodeFont(raw);
-        markInvalidFont(rejected);
-        if (rejected) {
-          var s = sharedApi();
-          if (s.showToast) s.showToast('Not a valid font-family value — using the default.', { kind: 'error' });
-        }
-      });
-    }
+    wireFontSelect(pane, {
+      selectId: 'codeFontSelect',
+      customRowId: 'codeFontCustomRow',
+      customInputId: 'codeFontCustomInput',
+      presets: codeFontOptions(cfg),
+      apply: function (stack) {
+        var api = sharedApi();
+        return api.setCodeFont ? api.setCodeFont(stack) : '';
+      },
+    });
+
+    wireFontSelect(pane, {
+      selectId: 'uiFontSelect',
+      customRowId: 'uiFontCustomRow',
+      customInputId: 'uiFontCustomInput',
+      presets: uiFontOptions(),
+      apply: function (stack) {
+        var api = sharedApi();
+        return api.setUIFont ? api.setUIFont(stack) : '';
+      },
+    });
 
     if (show.width) {
       pane.querySelectorAll('[data-settings-width]').forEach(function (btn) {

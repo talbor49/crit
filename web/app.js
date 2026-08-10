@@ -828,7 +828,10 @@
     initWidth();
     // Code font is a pure CSS-variable override; no mode-specific work here,
     // so the shared helper owns read + apply.
-    if (window.crit && window.crit.shared) window.crit.shared.applyCodeFontFromCookie();
+    if (window.crit && window.crit.shared) {
+      window.crit.shared.applyCodeFontFromCookie();
+      window.crit.shared.applyUIFontFromCookie();
+    }
     initSidebarWidths();
 
     // Measure actual header height and set CSS variable for sticky offsets
@@ -8225,11 +8228,7 @@
 
   // ===== Mermaid =====
   function getMermaidTheme() {
-    const dataTheme = document.documentElement.getAttribute('data-theme');
-    if (dataTheme === 'light') return 'default';
-    if (dataTheme === 'dark') return 'dark';
-    // System theme: check prefers-color-scheme
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'default' : 'dark';
+    return window.crit.shared.isDarkTheme() ? 'dark' : 'default';
   }
 
   function renderMermaidBlocks() {
@@ -8255,9 +8254,7 @@
 
   window.applyTheme = function(choice) {
     setSetting('theme', choice);
-    if (choice === 'light') document.documentElement.setAttribute('data-theme', 'light');
-    else if (choice === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-    else document.documentElement.removeAttribute('data-theme');
+    window.crit.shared.applyThemeChoice(choice);
 
     // Re-initialize mermaid diagrams with updated theme
     if (typeof mermaid !== 'undefined') {

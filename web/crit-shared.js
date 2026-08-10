@@ -73,11 +73,55 @@
     }
   }
 
-  function applyThemeFromCookie() {
-    const t = readThemeFromSettings();
+  // ---- Themes ----
+  // `system`, `light`, and `dark` are built in; everything after them is a
+  // community palette contributed as one [data-theme="<id>"] block in
+  // theme.css (see THEMES.md). `dark` here only tells mermaid and the
+  // scrollbar which side of the fence a palette sits on.
+  const THEMES = [
+    { id: 'system', label: 'System', dark: null },
+    { id: 'light', label: 'Light', dark: false },
+    { id: 'dark', label: 'Dark', dark: true },
+    { id: 'catppuccin-mocha', label: 'Catppuccin Mocha', dark: true },
+    { id: 'catppuccin-latte', label: 'Catppuccin Latte', dark: false },
+    { id: 'dracula', label: 'Dracula', dark: true },
+    { id: 'nord', label: 'Nord', dark: true },
+    { id: 'gruvbox-dark', label: 'Gruvbox Dark', dark: true },
+    { id: 'rose-pine', label: 'Rosé Pine', dark: true },
+  ];
+  const BUILTIN_THEME_IDS = ['system', 'light', 'dark'];
+
+  function themeById(id) {
+    for (let i = 0; i < THEMES.length; i++) {
+      if (THEMES[i].id === id) return THEMES[i];
+    }
+    return null;
+  }
+
+  // Community themes carry a class so one generic highlight.js block can read
+  // their --crit-syn-* tokens; the built-in dark/light keep their own rules.
+  function applyThemeChoice(id) {
+    const theme = themeById(id) || THEMES[0];
     const html = document.documentElement;
-    if (t === 'light' || t === 'dark') html.setAttribute('data-theme', t);
-    else html.removeAttribute('data-theme');
+    if (theme.id === 'system') html.removeAttribute('data-theme');
+    else html.setAttribute('data-theme', theme.id);
+    html.classList.toggle('crit-theme-custom', BUILTIN_THEME_IDS.indexOf(theme.id) === -1);
+    html.classList.toggle('crit-theme-light', theme.dark === false);
+    return theme;
+  }
+
+  function applyThemeFromCookie() {
+    return applyThemeChoice(readThemeFromSettings());
+  }
+
+  // True when the active palette is dark, resolving `system` against the OS.
+  function isDarkTheme() {
+    const theme = themeById(readThemeFromSettings()) || THEMES[0];
+    if (theme.dark === null) {
+      return !(typeof window !== 'undefined' && window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: light)').matches);
+    }
+    return theme.dark;
   }
 
   // Generic crit-settings JSON cookie accessors (mirror app.js semantics).
@@ -129,13 +173,17 @@
     return v;
   }
 
-  function applyCodeFont(stack) {
+  function applyFontVar(cssVar, stack) {
     const root = document.documentElement;
     if (!root || !root.style) return '';
     const clean = sanitizeCodeFont(stack);
-    if (clean) root.style.setProperty('--crit-font-code', clean);
-    else root.style.removeProperty('--crit-font-code');
+    if (clean) root.style.setProperty(cssVar, clean);
+    else root.style.removeProperty(cssVar);
     return clean;
+  }
+
+  function applyCodeFont(stack) {
+    return applyFontVar('--crit-font-code', stack);
   }
 
   function applyCodeFontFromCookie() {
@@ -148,6 +196,33 @@
     const clean = sanitizeCodeFont(stack);
     setSetting('codeFont', clean);
     applyCodeFont(clean);
+    return clean;
+  }
+
+  // ---- UI font ----
+  // Same mechanism against --crit-font-body (chrome, comments, file tree).
+  // Presets only — the server's font discovery is monospace-only by design,
+  // so a reader who wants something else types it into Custom.
+  const UI_FONT_PRESETS = [
+    { id: 'default', label: 'Default (Inter)', stack: '' },
+    { id: 'system', label: 'System UI', stack: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
+    { id: 'humanist', label: 'Humanist sans', stack: '"Optima", "Segoe UI", "Lucida Grande", sans-serif' },
+    { id: 'serif', label: 'Serif', stack: 'Georgia, "Iowan Old Style", "Times New Roman", serif' },
+    { id: 'mono', label: 'Monospace', stack: 'var(--crit-font-mono)' },
+  ];
+
+  function applyUIFont(stack) {
+    return applyFontVar('--crit-font-body', stack);
+  }
+
+  function applyUIFontFromCookie() {
+    return applyUIFont(getSetting('uiFont', ''));
+  }
+
+  function setUIFont(stack) {
+    const clean = sanitizeCodeFont(stack);
+    setSetting('uiFont', clean);
+    applyUIFont(clean);
     return clean;
   }
 
@@ -1113,6 +1188,9 @@
     setCookie,
     readThemeFromSettings,
     applyThemeFromCookie,
+    applyThemeChoice,
+    isDarkTheme,
+    THEMES,
     getSetting,
     setSetting,
     CODE_FONT_PRESETS,
@@ -1120,6 +1198,10 @@
     applyCodeFont,
     applyCodeFontFromCookie,
     setCodeFont,
+    UI_FONT_PRESETS,
+    applyUIFont,
+    applyUIFontFromCookie,
+    setUIFont,
     updateCommentCountIndicator,
     showToast,
     runFinishReview,

@@ -1162,3 +1162,120 @@ test('CODE_FONT_PRESETS only includes always-available entries', () => {
     assert.equal(shared.sanitizeCodeFont(p.stack), p.stack, p.id + ' must survive sanitization');
   });
 });
+
+// ---- UI font (--crit-font-body override) ----
+
+test('setUIFont persists and applies --crit-font-body independently of the code font', () => {
+  const { shared: s, props } = makeCodeFontSandbox();
+  s.setCodeFont("'Fira Code', monospace");
+  assert.equal(s.setUIFont('Georgia, serif'), 'Georgia, serif');
+  assert.equal(props['--crit-font-body'], 'Georgia, serif');
+  assert.equal(props['--crit-font-code'], "'Fira Code', monospace");
+  assert.equal(s.getSetting('uiFont', ''), 'Georgia, serif');
+});
+
+test('applyUIFontFromCookie restores the stored stack, and the default clears it', () => {
+  const { shared: s, props } = makeCodeFontSandbox();
+  s.setSetting('uiFont', 'system-ui, sans-serif');
+  s.applyUIFontFromCookie();
+  assert.equal(props['--crit-font-body'], 'system-ui, sans-serif');
+  s.setUIFont('');
+  assert.equal('--crit-font-body' in props, false);
+});
+
+test('UI_FONT_PRESETS leads with a default that clears the override', () => {
+  assert.equal(shared.UI_FONT_PRESETS[0].id, 'default');
+  assert.equal(shared.UI_FONT_PRESETS[0].stack, '');
+});
+
+// ---- Themes ----
+
+function makeThemeSandbox() {
+  const attrs = {};
+  const classes = new Set();
+  const doc = {
+    cookie: '',
+    documentElement: {
+      style: { setProperty() {}, removeProperty() {} },
+      setAttribute(k, v) { attrs[k] = v; },
+      removeAttribute(k) { delete attrs[k]; },
+      classList: {
+        toggle(name, on) { if (on) classes.add(name); else classes.delete(name); },
+      },
+    },
+  };
+  const win = { matchMedia: () => ({ matches: false }) };
+  new Function('window', 'document', src + '\nreturn window;')(win, doc);
+  return { shared: win.crit.shared, attrs, classes, win };
+}
+
+test('applyThemeChoice: system clears data-theme, built-ins set it without the custom class', () => {
+  const { shared: s, attrs, classes } = makeThemeSandbox();
+  s.applyThemeChoice('dark');
+  assert.equal(attrs['data-theme'], 'dark');
+  assert.equal(classes.has('crit-theme-custom'), false);
+  s.applyThemeChoice('system');
+  assert.equal('data-theme' in attrs, false);
+});
+
+test('applyThemeChoice: a community palette sets data-theme and the custom class', () => {
+  const { shared: s, attrs, classes } = makeThemeSandbox();
+  s.applyThemeChoice('dracula');
+  assert.equal(attrs['data-theme'], 'dracula');
+  assert.equal(classes.has('crit-theme-custom'), true);
+  assert.equal(classes.has('crit-theme-light'), false);
+});
+
+test('applyThemeChoice: a light community palette also gets the light class', () => {
+  const { shared: s, classes } = makeThemeSandbox();
+  s.applyThemeChoice('catppuccin-latte');
+  assert.equal(classes.has('crit-theme-custom'), true);
+  assert.equal(classes.has('crit-theme-light'), true);
+});
+
+test('applyThemeChoice falls back to system for an unknown id, so a stale cookie cannot break the palette', () => {
+  const { shared: s, attrs, classes } = makeThemeSandbox();
+  s.applyThemeChoice('dracula');
+  const theme = s.applyThemeChoice('theme-that-was-removed');
+  assert.equal(theme.id, 'system');
+  assert.equal('data-theme' in attrs, false);
+  assert.equal(classes.has('crit-theme-custom'), false);
+});
+
+test('isDarkTheme resolves system against the OS and named palettes against their flag', () => {
+  const { shared: s, win } = makeThemeSandbox();
+  win.matchMedia = () => ({ matches: true }); // OS prefers light
+  s.setSetting('theme', 'system');
+  assert.equal(s.isDarkTheme(), false);
+  win.matchMedia = () => ({ matches: false });
+  assert.equal(s.isDarkTheme(), true);
+  s.setSetting('theme', 'catppuccin-latte');
+  assert.equal(s.isDarkTheme(), false);
+  s.setSetting('theme', 'gruvbox-dark');
+  assert.equal(s.isDarkTheme(), true);
+});
+
+test('every THEMES entry has an id, a label, and a dark flag', () => {
+  assert.ok(shared.THEMES.length >= 4);
+  for (const t of shared.THEMES) {
+    assert.equal(typeof t.id, 'string');
+    assert.ok(t.id.length > 0);
+    assert.equal(typeof t.label, 'string');
+    assert.ok(t.dark === true || t.dark === false || t.dark === null);
+  }
+});
+
+test('every registered palette has a theme.css block, and light ones inherit the light base', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'theme.css'), 'utf8');
+  const lightBase = css.slice(0, css.indexOf('[data-theme="light"] {'));
+  for (const t of shared.THEMES) {
+    if (t.id === 'system') continue;
+    assert.ok(css.includes('[data-theme="' + t.id + '"] {'),
+      'theme.css has no [data-theme="' + t.id + '"] block');
+    if (t.dark === false && t.id !== 'light') {
+      // Without this the palette inherits :root (dark) and renders broken.
+      assert.ok(lightBase.includes('[data-theme="' + t.id + '"],'),
+        t.id + ' is light but is not part of the [data-theme="light"] selector list');
+    }
+  }
+});

@@ -676,7 +676,10 @@
   --crit-icon-github: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='currentColor'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0016 8c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E");
 }
 
-/* ===== Light (explicit) ===== */
+/* ===== Light (explicit) =====
+   Light community palettes (THEMES.md) join this selector to inherit the full
+   light token set, then override only their identity tokens further below. */
+[data-theme="catppuccin-latte"],
 [data-theme="light"] {
   --crit-font-code: var(--crit-font-mono);
 
@@ -887,6 +890,339 @@
   --crit-icon-github: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='currentColor'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0016 8c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E");
 }
 
+/* =====================================================================
+   Community palettes — see THEMES.md for the contribution guide.
+
+   A palette overrides only its identity tokens; everything else falls
+   through to the :root (dark) or [data-theme="light"] base above. The
+   --crit-syn-* tokens drive one generic highlight.js block at the bottom
+   of this file, which applies to any palette in this section.
+   ===================================================================== */
+
+/* ---- Catppuccin Mocha (dark) ---- */
+[data-theme="catppuccin-mocha"] {
+  --crit-bg-page:     #181825;
+  --crit-bg-card:     #1e1e2e;
+  --crit-bg-elevated: #313244;
+  --crit-fg-primary:   #cdd6f4;
+  --crit-fg-secondary: #bac2de;
+  --crit-fg-muted:     #7f849c;
+  --crit-brand:         #89b4fa;
+  --crit-brand-hover:   #b4befe;
+  --crit-brand-subtle:  rgba(137, 180, 250, 0.10);
+  --crit-brand-bg:      rgba(137, 180, 250, 0.15);
+  --crit-line-focus-bg: rgba(137, 180, 250, 0.10);
+  --crit-brand-cta:       #5a8ad8;
+  --crit-brand-cta-hover: #6b99e3;
+  --crit-pill-bg:       #313244;
+  --crit-pill-bg-hover: #45475a;
+  --crit-pill-fg:       #cdd6f4;
+  --crit-pill-fg-muted: #a6adc8;
+  --crit-pill-border:   #45475a;
+  --crit-rail-fg:       #9399b2;
+  --crit-rail-arrow:    #6c7086;
+  --crit-editor-bg:          #1e1e2e;
+  --crit-editor-bg-card:     #181825;
+  --crit-editor-bg-elevated: #313244;
+  --crit-editor-bg-hover:    #45475a;
+  --crit-editor-bg-gutter:   #181825;
+  --crit-editor-code-bg:     #11111b;
+  --crit-editor-comment-bg:  #1e2030;
+  --crit-editor-fg:           #cdd6f4;
+  --crit-editor-fg-secondary: #bac2de;
+  --crit-editor-fg-muted:     #a6adc8;
+  --crit-editor-scrollbar-bg:    #1e1e2e;
+  --crit-editor-scrollbar-thumb: #45475a;
+  --crit-green:  #a6e3a1;
+  --crit-red:    #f38ba8;
+  --crit-orange: #fab387;
+  --crit-yellow: #f9e2af;
+  --crit-purple: #cba6f7;
+  --crit-visual-accent: #f9e2af;
+  --crit-border:         #313244;
+  --crit-border-strong:  #45475a;
+  --crit-border-comment: #585b70;
+  --crit-syn-comment:     #7f849c;
+  --crit-syn-keyword:     #cba6f7;
+  --crit-syn-string:      #a6e3a1;
+  --crit-syn-number:      #fab387;
+  --crit-syn-function:    #89b4fa;
+  --crit-syn-type:        #f9e2af;
+  --crit-syn-tag:         #f38ba8;
+  --crit-syn-builtin:     #94e2d5;
+  --crit-syn-punctuation: #cdd6f4;
+}
+
+/* ---- Catppuccin Latte (light) ---- */
+[data-theme="catppuccin-latte"] {
+  --crit-bg-page:     #eff1f5;
+  --crit-bg-card:     #e6e9ef;
+  --crit-bg-elevated: #dce0e8;
+  --crit-fg-primary:   #4c4f69;
+  --crit-fg-secondary: #5c5f77;
+  --crit-fg-muted:     #8c8fa1;
+  --crit-brand:         #1e66f5;
+  --crit-brand-hover:   #04a5e5;
+  --crit-brand-subtle:  rgba(30, 102, 245, 0.08);
+  --crit-brand-bg:      rgba(30, 102, 245, 0.12);
+  --crit-line-focus-bg: rgba(30, 102, 245, 0.08);
+  --crit-brand-cta:       #1e66f5;
+  --crit-brand-cta-hover: #3b7bf7;
+  --crit-pill-bg:       #dce0e8;
+  --crit-pill-bg-hover: #ccd0da;
+  --crit-pill-fg:       #4c4f69;
+  --crit-pill-fg-muted: #6c6f85;
+  --crit-pill-border:   #bcc0cc;
+  --crit-rail-fg:       #6c6f85;
+  --crit-rail-arrow:    #8c8fa1;
+  --crit-editor-bg:          #eff1f5;
+  --crit-editor-bg-card:     #e6e9ef;
+  --crit-editor-bg-elevated: #dce0e8;
+  --crit-editor-bg-hover:    #ccd0da;
+  --crit-editor-bg-gutter:   #e6e9ef;
+  --crit-editor-code-bg:     #e6e9ef;
+  --crit-editor-comment-bg:  #e6e9ef;
+  --crit-editor-fg:           #4c4f69;
+  --crit-editor-fg-secondary: #5c5f77;
+  --crit-editor-fg-muted:     #6c6f85;
+  --crit-editor-scrollbar-bg:    #eff1f5;
+  --crit-editor-scrollbar-thumb: #bcc0cc;
+  --crit-green:  #40a02b;
+  --crit-red:    #d20f39;
+  --crit-orange: #fe640b;
+  --crit-yellow: #df8e1d;
+  --crit-purple: #8839ef;
+  --crit-visual-accent: #df8e1d;
+  --crit-border:         #ccd0da;
+  --crit-border-strong:  #bcc0cc;
+  --crit-border-comment: #9ca0b0;
+  --crit-syn-comment:     #8c8fa1;
+  --crit-syn-keyword:     #8839ef;
+  --crit-syn-string:      #40a02b;
+  --crit-syn-number:      #fe640b;
+  --crit-syn-function:    #1e66f5;
+  --crit-syn-type:        #df8e1d;
+  --crit-syn-tag:         #d20f39;
+  --crit-syn-builtin:     #179299;
+  --crit-syn-punctuation: #4c4f69;
+}
+
+/* ---- Dracula (dark) ---- */
+[data-theme="dracula"] {
+  --crit-bg-page:     #21222c;
+  --crit-bg-card:     #282a36;
+  --crit-bg-elevated: #343746;
+  --crit-fg-primary:   #f8f8f2;
+  --crit-fg-secondary: #d3d5e0;
+  --crit-fg-muted:     #6272a4;
+  --crit-brand:         #bd93f9;
+  --crit-brand-hover:   #d0aeff;
+  --crit-brand-subtle:  rgba(189, 147, 249, 0.10);
+  --crit-brand-bg:      rgba(189, 147, 249, 0.16);
+  --crit-line-focus-bg: rgba(189, 147, 249, 0.10);
+  --crit-brand-cta:       #7d5bb8;
+  --crit-brand-cta-hover: #8c68cc;
+  --crit-pill-bg:       #343746;
+  --crit-pill-bg-hover: #44475a;
+  --crit-pill-fg:       #f8f8f2;
+  --crit-pill-fg-muted: #a5abc4;
+  --crit-pill-border:   #44475a;
+  --crit-rail-fg:       #9aa1c0;
+  --crit-rail-arrow:    #6272a4;
+  --crit-editor-bg:          #282a36;
+  --crit-editor-bg-card:     #21222c;
+  --crit-editor-bg-elevated: #343746;
+  --crit-editor-bg-hover:    #44475a;
+  --crit-editor-bg-gutter:   #21222c;
+  --crit-editor-code-bg:     #1e1f29;
+  --crit-editor-comment-bg:  #2b2e3f;
+  --crit-editor-fg:           #f8f8f2;
+  --crit-editor-fg-secondary: #d3d5e0;
+  --crit-editor-fg-muted:     #a5abc4;
+  --crit-editor-scrollbar-bg:    #282a36;
+  --crit-editor-scrollbar-thumb: #44475a;
+  --crit-green:  #50fa7b;
+  --crit-red:    #ff5555;
+  --crit-orange: #ffb86c;
+  --crit-yellow: #f1fa8c;
+  --crit-purple: #bd93f9;
+  --crit-visual-accent: #f1fa8c;
+  --crit-border:         #343746;
+  --crit-border-strong:  #44475a;
+  --crit-border-comment: #6272a4;
+  --crit-syn-comment:     #7c88b8;
+  --crit-syn-keyword:     #ff79c6;
+  --crit-syn-string:      #f1fa8c;
+  --crit-syn-number:      #bd93f9;
+  --crit-syn-function:    #50fa7b;
+  --crit-syn-type:        #8be9fd;
+  --crit-syn-tag:         #ff79c6;
+  --crit-syn-builtin:     #8be9fd;
+  --crit-syn-punctuation: #f8f8f2;
+}
+
+/* ---- Nord (dark) ---- */
+[data-theme="nord"] {
+  --crit-bg-page:     #2e3440;
+  --crit-bg-card:     #333a47;
+  --crit-bg-elevated: #3b4252;
+  --crit-fg-primary:   #eceff4;
+  --crit-fg-secondary: #d8dee9;
+  --crit-fg-muted:     #7b88a1;
+  --crit-brand:         #88c0d0;
+  --crit-brand-hover:   #8fbcbb;
+  --crit-brand-subtle:  rgba(136, 192, 208, 0.10);
+  --crit-brand-bg:      rgba(136, 192, 208, 0.16);
+  --crit-line-focus-bg: rgba(136, 192, 208, 0.10);
+  --crit-brand-cta:       #5e81ac;
+  --crit-brand-cta-hover: #6b8fbb;
+  --crit-pill-bg:       #3b4252;
+  --crit-pill-bg-hover: #434c5e;
+  --crit-pill-fg:       #e5e9f0;
+  --crit-pill-fg-muted: #b3bccb;
+  --crit-pill-border:   #434c5e;
+  --crit-rail-fg:       #a4aec1;
+  --crit-rail-arrow:    #7b88a1;
+  --crit-editor-bg:          #2e3440;
+  --crit-editor-bg-card:     #2b313c;
+  --crit-editor-bg-elevated: #3b4252;
+  --crit-editor-bg-hover:    #434c5e;
+  --crit-editor-bg-gutter:   #2b313c;
+  --crit-editor-code-bg:     #292f3a;
+  --crit-editor-comment-bg:  #343d4d;
+  --crit-editor-fg:           #eceff4;
+  --crit-editor-fg-secondary: #d8dee9;
+  --crit-editor-fg-muted:     #aab5c7;
+  --crit-editor-scrollbar-bg:    #2e3440;
+  --crit-editor-scrollbar-thumb: #4c566a;
+  --crit-green:  #a3be8c;
+  --crit-red:    #bf616a;
+  --crit-orange: #d08770;
+  --crit-yellow: #ebcb8b;
+  --crit-purple: #b48ead;
+  --crit-visual-accent: #ebcb8b;
+  --crit-border:         #3b4252;
+  --crit-border-strong:  #434c5e;
+  --crit-border-comment: #5e81ac;
+  --crit-syn-comment:     #8592a8;
+  --crit-syn-keyword:     #81a1c1;
+  --crit-syn-string:      #a3be8c;
+  --crit-syn-number:      #b48ead;
+  --crit-syn-function:    #88c0d0;
+  --crit-syn-type:        #8fbcbb;
+  --crit-syn-tag:         #bf616a;
+  --crit-syn-builtin:     #ebcb8b;
+  --crit-syn-punctuation: #eceff4;
+}
+
+/* ---- Gruvbox Dark ---- */
+[data-theme="gruvbox-dark"] {
+  --crit-bg-page:     #1d2021;
+  --crit-bg-card:     #282828;
+  --crit-bg-elevated: #3c3836;
+  --crit-fg-primary:   #ebdbb2;
+  --crit-fg-secondary: #d5c4a1;
+  --crit-fg-muted:     #928374;
+  --crit-brand:         #83a598;
+  --crit-brand-hover:   #8ec07c;
+  --crit-brand-subtle:  rgba(131, 165, 152, 0.10);
+  --crit-brand-bg:      rgba(131, 165, 152, 0.16);
+  --crit-line-focus-bg: rgba(131, 165, 152, 0.10);
+  --crit-brand-cta:       #458588;
+  --crit-brand-cta-hover: #4f9497;
+  --crit-pill-bg:       #3c3836;
+  --crit-pill-bg-hover: #504945;
+  --crit-pill-fg:       #ebdbb2;
+  --crit-pill-fg-muted: #bdae93;
+  --crit-pill-border:   #504945;
+  --crit-rail-fg:       #a89984;
+  --crit-rail-arrow:    #928374;
+  --crit-editor-bg:          #282828;
+  --crit-editor-bg-card:     #1d2021;
+  --crit-editor-bg-elevated: #3c3836;
+  --crit-editor-bg-hover:    #504945;
+  --crit-editor-bg-gutter:   #1d2021;
+  --crit-editor-code-bg:     #232526;
+  --crit-editor-comment-bg:  #32302f;
+  --crit-editor-fg:           #ebdbb2;
+  --crit-editor-fg-secondary: #d5c4a1;
+  --crit-editor-fg-muted:     #bdae93;
+  --crit-editor-scrollbar-bg:    #282828;
+  --crit-editor-scrollbar-thumb: #504945;
+  --crit-green:  #b8bb26;
+  --crit-red:    #fb4934;
+  --crit-orange: #fe8019;
+  --crit-yellow: #fabd2f;
+  --crit-purple: #d3869b;
+  --crit-visual-accent: #fabd2f;
+  --crit-border:         #3c3836;
+  --crit-border-strong:  #504945;
+  --crit-border-comment: #665c54;
+  --crit-syn-comment:     #a89984;
+  --crit-syn-keyword:     #fb4934;
+  --crit-syn-string:      #b8bb26;
+  --crit-syn-number:      #d3869b;
+  --crit-syn-function:    #8ec07c;
+  --crit-syn-type:        #fabd2f;
+  --crit-syn-tag:         #fb4934;
+  --crit-syn-builtin:     #fe8019;
+  --crit-syn-punctuation: #ebdbb2;
+}
+
+/* ---- Rosé Pine (dark) ---- */
+[data-theme="rose-pine"] {
+  --crit-bg-page:     #191724;
+  --crit-bg-card:     #1f1d2e;
+  --crit-bg-elevated: #26233a;
+  --crit-fg-primary:   #e0def4;
+  --crit-fg-secondary: #908caa;
+  --crit-fg-muted:     #6e6a86;
+  --crit-brand:         #c4a7e7;
+  --crit-brand-hover:   #d6c1f0;
+  --crit-brand-subtle:  rgba(196, 167, 231, 0.10);
+  --crit-brand-bg:      rgba(196, 167, 231, 0.16);
+  --crit-line-focus-bg: rgba(196, 167, 231, 0.10);
+  --crit-brand-cta:       #31748f;
+  --crit-brand-cta-hover: #3a869f;
+  --crit-pill-bg:       #26233a;
+  --crit-pill-bg-hover: #403d52;
+  --crit-pill-fg:       #e0def4;
+  --crit-pill-fg-muted: #908caa;
+  --crit-pill-border:   #403d52;
+  --crit-rail-fg:       #908caa;
+  --crit-rail-arrow:    #6e6a86;
+  --crit-editor-bg:          #191724;
+  --crit-editor-bg-card:     #1f1d2e;
+  --crit-editor-bg-elevated: #26233a;
+  --crit-editor-bg-hover:    #403d52;
+  --crit-editor-bg-gutter:   #1f1d2e;
+  --crit-editor-code-bg:     #21202e;
+  --crit-editor-comment-bg:  #232132;
+  --crit-editor-fg:           #e0def4;
+  --crit-editor-fg-secondary: #c9c5dd;
+  --crit-editor-fg-muted:     #908caa;
+  --crit-editor-scrollbar-bg:    #191724;
+  --crit-editor-scrollbar-thumb: #403d52;
+  --crit-green:  #9ccfd8;
+  --crit-red:    #eb6f92;
+  --crit-orange: #ebbcba;
+  --crit-yellow: #f6c177;
+  --crit-purple: #c4a7e7;
+  --crit-visual-accent: #f6c177;
+  --crit-border:         #26233a;
+  --crit-border-strong:  #403d52;
+  --crit-border-comment: #31748f;
+  --crit-syn-comment:     #6e6a86;
+  --crit-syn-keyword:     #31748f;
+  --crit-syn-string:      #f6c177;
+  --crit-syn-number:      #ebbcba;
+  --crit-syn-function:    #c4a7e7;
+  --crit-syn-type:        #9ccfd8;
+  --crit-syn-tag:         #eb6f92;
+  --crit-syn-builtin:     #9ccfd8;
+  --crit-syn-punctuation: #e0def4;
+}
+
 /* ===== highlight.js Dark Theme (Tokyo Night Dark) =====
    Default (system dark) — applies when no data-theme is set */
 .hljs{color:#9aa5ce;background:#1a1b26}
@@ -1007,3 +1343,77 @@
 [data-theme="light"] .addition .hljs-quote,
 [data-theme="light"] .addition .hljs-selector-pseudo,
 [data-theme="light"] .addition .hljs-selector-tag{color:var(--crit-editor-fg)}
+
+/* ===== highlight.js for community palettes =====
+   One block for every palette in the community section above: each maps its
+   --crit-syn-* tokens onto the same highlight.js groups the built-in themes
+   colour by hand, so a contributor never touches this rule. */
+html.crit-theme-custom .hljs{color:var(--crit-syn-punctuation);background:var(--crit-editor-bg)}
+html.crit-theme-custom .hljs-tag,
+html.crit-theme-custom .hljs-doctag,
+html.crit-theme-custom .hljs-selector-id,
+html.crit-theme-custom .hljs-selector-class,
+html.crit-theme-custom .hljs-regexp,
+html.crit-theme-custom .hljs-template-tag,
+html.crit-theme-custom .hljs-selector-pseudo,
+html.crit-theme-custom .hljs-selector-attr,
+html.crit-theme-custom .hljs-variable.language_{color:var(--crit-syn-tag)}
+html.crit-theme-custom .hljs-variable,
+html.crit-theme-custom .hljs-template-variable,
+html.crit-theme-custom .hljs-number,
+html.crit-theme-custom .hljs-literal,
+html.crit-theme-custom .hljs-params,
+html.crit-theme-custom .hljs-link{color:var(--crit-syn-number)}
+html.crit-theme-custom .hljs-built_in,
+html.crit-theme-custom .hljs-attribute,
+html.crit-theme-custom .hljs-symbol{color:var(--crit-syn-builtin)}
+html.crit-theme-custom .hljs-type,
+html.crit-theme-custom .hljs-selector-tag,
+html.crit-theme-custom .hljs-class .hljs-title{color:var(--crit-syn-type)}
+html.crit-theme-custom .hljs-title,
+html.crit-theme-custom .hljs-title.function_,
+html.crit-theme-custom .hljs-title.class_,
+html.crit-theme-custom .hljs-title.class_.inherited__,
+html.crit-theme-custom .hljs-subst,
+html.crit-theme-custom .hljs-property,
+html.crit-theme-custom .hljs-code,
+html.crit-theme-custom .hljs-formula,
+html.crit-theme-custom .hljs-section{color:var(--crit-syn-function)}
+html.crit-theme-custom .hljs-quote,
+html.crit-theme-custom .hljs-string,
+html.crit-theme-custom .hljs-bullet{color:var(--crit-syn-string)}
+html.crit-theme-custom .hljs-keyword,
+html.crit-theme-custom .hljs-operator,
+html.crit-theme-custom .hljs-attr,
+html.crit-theme-custom .hljs-name,
+html.crit-theme-custom .hljs-char.escape_{color:var(--crit-syn-keyword)}
+html.crit-theme-custom .hljs-comment,
+html.crit-theme-custom .hljs-meta{color:var(--crit-syn-comment)}
+html.crit-theme-custom .hljs-punctuation{color:var(--crit-syn-punctuation)}
+html.crit-theme-custom .hljs-emphasis{font-style:italic}
+html.crit-theme-custom .hljs-strong{font-weight:bold}
+html.crit-theme-custom .hljs-addition{color:var(--crit-green);background-color:var(--crit-diff-word-add-bg)}
+html.crit-theme-custom .hljs-deletion{color:var(--crit-red);background-color:var(--crit-diff-word-del-bg)}
+
+/* Light community palettes get the same AA contrast fixes the built-in light
+   theme has: token colours that fail contrast on a diff row darken to the
+   editor foreground. */
+html.crit-theme-light .deletion .diff-gutter-num,
+html.crit-theme-light .hljs-doctag > .diff-word-del,
+html.crit-theme-light .hljs-keyword > .diff-word-del,
+html.crit-theme-light .hljs-template-tag > .diff-word-del,
+html.crit-theme-light .hljs-template-variable > .diff-word-del,
+html.crit-theme-light .hljs-type > .diff-word-del,
+html.crit-theme-light .hljs-variable > .diff-word-del,
+html.crit-theme-light .hljs-tag > .diff-word-del,
+html.crit-theme-light .hljs-name > .diff-word-del,
+html.crit-theme-light .hljs-quote > .diff-word-del,
+html.crit-theme-light .hljs-selector-pseudo > .diff-word-del,
+html.crit-theme-light .hljs-selector-tag > .diff-word-del,
+html.crit-theme-light .hljs-code > .diff-word-del,
+html.crit-theme-light .hljs-comment > .diff-word-del,
+html.crit-theme-light .hljs-formula > .diff-word-del,
+html.crit-theme-light .addition .hljs-name,
+html.crit-theme-light .addition .hljs-quote,
+html.crit-theme-light .addition .hljs-selector-pseudo,
+html.crit-theme-light .addition .hljs-selector-tag{color:var(--crit-editor-fg)}

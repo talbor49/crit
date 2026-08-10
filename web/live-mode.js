@@ -395,6 +395,7 @@
 
   async function boot() {
     if (shared && shared.applyThemeFromCookie) shared.applyThemeFromCookie();
+    if (shared && shared.applyUIFontFromCookie) shared.applyUIFontFromCookie();
     state.session = await waitForSession();
     if (state.session.review_type !== 'live' && state.session.review_type !== 'preview') {
       console.warn('[live-mode] unexpected review_type:', state.session.review_type);
