@@ -6394,3 +6394,24 @@ body.crit-story-active .crit-story-rail-resizer { display: block; }
 .severity-missing-test {
   --crit-severity-color: var(--crit-brand);
 }
+
+/* ===== Triage buttons (Fix / Skip) ===== */
+.reply-triage {
+  display: flex;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.btn-fix {
+  border-color: color-mix(in srgb, var(--crit-green) 45%, transparent);
+  background: color-mix(in srgb, var(--crit-green) 15%, transparent);
+  color: var(--crit-green);
+}
+
+.btn-fix:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--crit-green) 26%, transparent);
+}
+
+.btn-skip:hover:not(:disabled) {
+  color: var(--crit-editor-fg);
+}

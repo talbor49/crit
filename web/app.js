@@ -6698,7 +6698,7 @@
 
   async function refreshAfterReplyChange(filePath) {
     if (filePath) {
-      refreshFileComments(filePath);
+      await refreshFileComments(filePath);
     } else {
       await refreshReviewComments();
       renderReviewConversation();
@@ -6808,7 +6808,7 @@
     buttons.className = 'reply-form-buttons';
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-sm';
+    cancelBtn.className = 'btn btn-sm reply-cancel-btn';
     cancelBtn.textContent = 'Cancel';
     cancelBtn.disabled = !!isPending;
 
@@ -6817,6 +6817,25 @@
     submitBtn.textContent = 'Reply';
     submitBtn.disabled = !!isPending;
 
+    // Triage shortcuts: one click posts the whole reply an agent is waiting
+    // for, then moves to the next comment so a review reads as a queue.
+    const triage = document.createElement('div');
+    triage.className = 'reply-triage';
+    const triageBtns = [
+      { verdict: 'fix', label: 'Fix', className: 'btn btn-sm btn-fix', title: 'Reply "fix" and go to the next comment' },
+      { verdict: 'skip', label: 'Skip', className: 'btn btn-sm btn-skip', title: 'Reply "skip" and go to the next comment' },
+    ].map(function(spec) {
+      const btn = document.createElement('button');
+      btn.className = spec.className;
+      btn.textContent = spec.label;
+      btn.title = spec.title;
+      btn.disabled = !!isPending;
+      btn.addEventListener('click', function() { triageReply(spec.verdict); });
+      triage.appendChild(btn);
+      return btn;
+    });
+
+    buttons.appendChild(triage);
     buttons.appendChild(cancelBtn);
     buttons.appendChild(submitBtn);
     // Always mounted; CSS hides the whole form when the card is collapsed.
@@ -6882,10 +6901,13 @@
       }, 150);
     });
 
-    submitBtn.addEventListener('click', async function() {
-      const body = activeField().value.trim();
-      if (!body) { activeField().focus(); return; }
-      submitBtn.disabled = true;
+    function setReplyControlsDisabled(disabled) {
+      submitBtn.disabled = disabled;
+      triageBtns.forEach(function(b) { b.disabled = disabled; });
+    }
+
+    async function postReply(body) {
+      setReplyControlsDisabled(true);
       try {
         const payload = { body: body };
         if (configAuthor) payload.author = configAuthor;
@@ -6925,12 +6947,30 @@
 
         activeReplyForms.delete(commentId);
         collapse();
-        refreshAfterReplyChange(filePath);
+        // Awaited so a triage reply navigates against the re-rendered list.
+        await refreshAfterReplyChange(filePath);
+        return true;
       } catch (err) {
         console.error('Failed to add reply:', err);
         showMiniToast('Failed to save reply');
-        submitBtn.disabled = false;
+        setReplyControlsDisabled(false);
+        return false;
       }
+    }
+
+    // Triage replies advance the queue: pin the cursor to this comment first so
+    // navigateToComment steps to the one after it, not back to the top.
+    async function triageReply(verdict) {
+      if (await postReply(verdict)) {
+        navCommentId = commentId;
+        navigateToComment(1);
+      }
+    }
+
+    submitBtn.addEventListener('click', function() {
+      const body = activeField().value.trim();
+      if (!body) { activeField().focus(); return; }
+      postReply(body);
     });
 
     textarea.addEventListener('keydown', function(e) {

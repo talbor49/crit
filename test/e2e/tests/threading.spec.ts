@@ -247,7 +247,7 @@ test.describe('Comment Threading', () => {
     await card.locator('.reply-textarea').fill('draft text');
 
     // Click Cancel
-    await card.locator('.reply-form-buttons .btn:not(.btn-primary)').click();
+    await card.locator('.reply-form-buttons .reply-cancel-btn').click();
 
     // Should collapse back to compact input, no reply added
     await expect(card.locator('.reply-input')).toBeVisible();
