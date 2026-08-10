@@ -1796,7 +1796,9 @@
     // Render mermaid diagrams
     renderMermaidBlocks();
 
-    // Render the inline Review Conversation section above filesContainer
+    // Render the review brief and inline Review Conversation section above
+    // filesContainer
+    renderReviewBrief();
     renderReviewConversation();
 
     // Re-attach intersection observers for file tree active tracking and
@@ -6522,6 +6524,30 @@
     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
     '<path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+  // ===== Review brief (crit describe) =====
+  // Title + markdown description an agent sets with `crit describe`, so the
+  // reviewer opens the tab already knowing what the change is about.
+  function renderReviewBrief() {
+    const brief = document.getElementById('reviewBrief');
+    if (!brief) return;
+    const title = (session.title || '').trim();
+    const description = (session.description || '').trim();
+    if (!title && !description) {
+      brief.hidden = true;
+      return;
+    }
+    brief.hidden = false;
+    document.getElementById('reviewBriefTitle').textContent = title || 'About this review';
+    const body = document.getElementById('reviewBriefBody');
+    body.innerHTML = description ? commentMd.render(description) : '';
+    body.hidden = !description;
+    // A title with no body has nothing to expand.
+    brief.classList.toggle('review-brief--title-only', !description);
+    // renderAllFiles' own mermaid pass runs before this, so a diagram in the
+    // description needs its own — but only when there is actually one.
+    if (body.querySelector('code.language-mermaid')) renderMermaidBlocks();
+  }
+
   function renderReviewConversation() {
     const section = document.getElementById('reviewConversation');
     if (!section) return;
@@ -7960,6 +7986,19 @@
       } catch (err) {
         console.error('story-updated parse:', err);
       }
+      },
+      // `crit describe` wrote a new header; the payload carries it, so there is
+      // nothing to re-fetch.
+      'describe-changed': function(data) {
+        try {
+          const envelope = data || {};
+          const inner = envelope.content ? JSON.parse(envelope.content) : envelope;
+          session.title = inner.title || '';
+          session.description = inner.description || '';
+          renderReviewBrief();
+        } catch (err) {
+          console.error('describe-changed parse:', err);
+        }
       },
       'server-shutdown': function() {
       conn.close();

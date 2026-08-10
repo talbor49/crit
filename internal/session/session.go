@@ -460,6 +460,8 @@ type Session struct {
 	shareOrg            string
 	shareOrgName        string
 	shareVisibility     string
+	title               string
+	description         string
 	status              *Status
 	roundComplete       chan struct{}
 	pendingEdits        int
@@ -509,6 +511,13 @@ type CritJSON struct {
 	ReviewComments  []Comment               `json:"review_comments,omitempty"`
 	CliArgs         []string                `json:"cli_args,omitempty"`
 	Files           map[string]CritJSONFile `json:"files"`
+
+	// Title and Description are the optional review header ("what am I looking
+	// at"): a one-line subject and a markdown summary an agent writes with
+	// `crit describe`. Preserved across the daemon's read-merge-modify write
+	// cycle by living on CritJSON — buildCritJSON never overwrites them.
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
 
 	// ActiveDiffScope is the most recent focus diff_scope from this session.
 	// Read by `crit push` to gate full-stack pushes; "" indicates working-tree mode.
@@ -2562,6 +2571,9 @@ func (s *Session) loadCritJSONLocked() {
 
 	// Restore the story (nil if none), so GetSessionInfo can surface it.
 	s.story = cj.Story
+
+	s.title = cj.Title
+	s.description = cj.Description
 
 	// Restore pending DELETE intents so they survive across daemon restarts.
 	s.pendingRemoteDeletes = append([]RemoteRef(nil), cj.PendingRemoteDeletes...)

@@ -613,11 +613,25 @@ func (s *Session) mergeExternalCritJSON() bool {
 	}
 
 	changed = s.mergeReviewCommentsFromDisk(cj.ReviewComments) || changed
+	describeChanged := s.title != cj.Title || s.description != cj.Description
+	s.title = cj.Title
+	s.description = cj.Description
 	s.mu.Unlock()
 
+	if describeChanged {
+		s.notify(SSEEvent{Type: "describe-changed", Content: marshalDescribe(cj.Title, cj.Description)})
+	}
 	if changed {
 		s.notify(SSEEvent{Type: "comments-changed"})
 	}
 
 	return changed
+}
+
+func marshalDescribe(title, description string) string {
+	payload, err := json.Marshal(map[string]string{"title": title, "description": description})
+	if err != nil {
+		return "{}"
+	}
+	return string(payload)
 }

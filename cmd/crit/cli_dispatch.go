@@ -66,6 +66,19 @@ Options:
   -e, --event <type>     comment, approve, or request-changes
   -m, --message <text>   Review-level message
   -o, --output <dir>     Crit data root for reviews`},
+	{name: "describe", handler: runDescribe, help: `Usage: crit describe [--title <text>] [--body <text>|--file <path>|-]
+       crit describe --clear
+
+Set the review header shown above the file list: a one-line title and a
+markdown description summarising the CR or PR under review.
+
+Options:
+      --title <text>   One-line review title
+      --body <text>    Markdown description
+      --file <path>    Read the description from a file ("-" for stdin)
+      --clear          Remove the title and description
+      --session <id>   Target a specific review session
+  -o, --output <dir>   Crit data root for reviews`},
 	{name: "comment", handler: runComment, help: `Usage: crit comment [options] <body>
        crit comment [options] <path> <body>
        crit comment [options] <path>:<line[-end]> <body>

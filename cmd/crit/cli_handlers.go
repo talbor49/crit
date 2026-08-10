@@ -26,6 +26,7 @@ func runPlan(args []string)      { clicmd.Exit(session.RunPlan(args)) }
 func runStop(args []string)      { clicmd.Exit(session.RunStop(args)) }
 func runStatus(args []string)    { clicmd.Exit(session.RunStatus(args)) }
 func runCleanup(args []string)   { clicmd.Exit(review.RunCleanup(args)) }
+func runDescribe(args []string)  { clicmd.Exit(review.RunDescribe(args)) }
 func runPR(args []string)        { clicmd.Exit(forge.RunChange(forge.GitHub, args)) }
 func runMR(args []string)        { clicmd.Exit(forge.RunChange(forge.GitLab, args)) }
 

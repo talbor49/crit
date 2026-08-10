@@ -10,7 +10,7 @@ import (
 
 var publicCommandNames = []string{
 	"share", "fetch", "unpublish", "install", "config", "check", "pr", "mr", "pull",
-	"push", "comment", "comments", "review", "live", "preview", "plan", "story",
+	"push", "describe", "comment", "comments", "review", "live", "preview", "plan", "story",
 	"auth", "stop", "status", "stats", "cleanup",
 }
 

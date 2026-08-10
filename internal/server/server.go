@@ -664,15 +664,18 @@ func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
 	}
 	type liveSessionResponse struct {
 		SessionInfo
-		ReviewType string `json:"review_type,omitempty"`
-		Origin     string `json:"origin,omitempty"`
-		ProxyPort  int    `json:"proxy_port,omitempty"`
+		ReviewType  string `json:"review_type,omitempty"`
+		Origin      string `json:"origin,omitempty"`
+		ProxyPort   int    `json:"proxy_port,omitempty"`
+		Title       string `json:"title,omitempty"`
+		Description string `json:"description,omitempty"`
 	}
 	resp := liveSessionResponse{SessionInfo: info}
 	if session != nil {
 		resp.ReviewType = session.ReviewType
 		resp.Origin = session.Origin
 		resp.ProxyPort = session.ProxyPort
+		resp.Title, resp.Description = session.GetDescribe()
 	}
 	writeJSON(w, resp)
 }
