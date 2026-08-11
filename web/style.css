@@ -1682,8 +1682,35 @@ textarea.drag-active {
 
 .comment-form-actions-left {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-right: auto;
+}
+
+/* Quick actions submit on click, unlike the editor helpers beside them, so
+   they read as a distinct group rather than more of the same row. */
+.quick-action {
+  border-color: var(--crit-border-strong);
+  color: var(--crit-editor-fg-secondary);
+}
+
+.quick-action:first-of-type {
+  margin-left: 4px;
+  border-left: 1px solid var(--crit-border-strong);
+  padding-left: 12px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.quick-action:hover:not(:disabled) {
+  border-color: var(--crit-brand);
+  color: var(--crit-brand);
+}
+
+@media (pointer: coarse) {
+  .quick-action {
+    min-height: 44px;
+  }
 }
 
 .comment-template-bar {

@@ -4995,10 +4995,25 @@
     });
   }
 
+  // ===== Quick comment actions =====
+  // One click writes the body and submits — the whole point is not having to
+  // type a directive the agent already understands. The third is labelled
+  // "PR comment" rather than "Comment" because the submit button next to it
+  // is already called Comment.
+  const QUICK_COMMENTS = [
+    { label: 'Fix it', body: 'fix it', title: 'Comment "fix it" and submit' },
+    { label: 'Explain it', body: 'explain it', title: 'Comment "explain it" and submit' },
+    {
+      label: 'PR comment',
+      body: 'comment inline on the PR for me as a separate comment',
+      title: 'Ask the agent to post this inline on the PR, as its own comment',
+    },
+  ];
+
   // ===== Comment Templates =====
   // Template CRUD and bar DOM delegated to window.crit.commentTemplates (crit-comment-templates.js).
 
-  function attachTemplateUI(form, textarea, actions) {
+  function attachTemplateUI(form, textarea, actions, doSubmit, allowQuickActions) {
     const tmplModule = window.crit.commentTemplates;
 
     const templateBar = tmplModule.buildTemplateBar({
@@ -5030,6 +5045,25 @@
     leftGroup.className = 'comment-form-actions-left';
     leftGroup.appendChild(suggestBtn);
     leftGroup.appendChild(saveTemplateBtn);
+
+    if (allowQuickActions && typeof doSubmit === 'function') {
+      QUICK_COMMENTS.forEach(function(action) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm quick-action';
+        btn.textContent = action.label;
+        btn.title = action.title;
+        btn.dataset.quickAction = action.body;
+        btn.addEventListener('click', function() {
+          // Append rather than replace: whatever the reviewer already typed is
+          // context for the directive, and losing it to a misclick would be
+          // worse than an extra line.
+          const typed = textarea.value.trim();
+          textarea.value = typed ? typed + '\n\n' + action.body : action.body;
+          doSubmit();
+        });
+        leftGroup.appendChild(btn);
+      });
+    }
 
     actions.insertBefore(leftGroup, actions.firstChild);
     form.insertBefore(templateBar, form.querySelector('textarea'));
@@ -5536,7 +5570,7 @@
     form.appendChild(header);
     form.appendChild(textarea);
     form.appendChild(actions);
-    attachTemplateUI(form, textarea, actions);
+    attachTemplateUI(form, textarea, actions, doSubmit, !opts.editingId && !formObj.editingId);
     wrapper.appendChild(form);
 
     if (opts.autoFocus) {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { clearAllComments, loadPage, mdSection, switchToDocumentView, addComment, getMdPath } from './helpers';
 
 // ============================================================
@@ -97,5 +97,72 @@ test.describe('Comment severity', () => {
     const card = mdSection(page).locator('.comment-card').first();
     await expect(card).not.toHaveClass(/has-severity/);
     await expect(card.locator('.comment-severity-badge')).toHaveCount(0);
+  });
+});
+
+// ============================================================
+// One-click quick comments in the composer
+// ============================================================
+test.describe('Quick comment actions', () => {
+  test.beforeEach(async ({ page, request }) => {
+    await clearAllComments(request);
+    await loadPage(page);
+    await switchToDocumentView(page);
+  });
+
+  async function openCommentForm(page: Page) {
+    const section = mdSection(page);
+    const lineBlock = section.locator('.line-block').first();
+    await lineBlock.scrollIntoViewIfNeeded();
+    await lineBlock.hover();
+    await section.locator('.line-comment-gutter').first().click();
+    await expect(page.locator('.comment-form textarea')).toBeVisible();
+  }
+
+  test('the composer offers the three quick actions', async ({ page }) => {
+    await openCommentForm(page);
+    await expect(page.locator('.comment-form .quick-action')).toHaveText(['Fix it', 'Explain it', 'PR comment']);
+  });
+
+  test('one click posts the canned body with no typing', async ({ page }) => {
+    await openCommentForm(page);
+    await page.locator('.comment-form .quick-action', { hasText: 'Fix it' }).click();
+
+    const card = mdSection(page).locator('.comment-card').first();
+    await expect(card).toBeVisible();
+    await expect(card.locator('.comment-body')).toHaveText('fix it');
+    // The form submits and closes — the whole point is a single click.
+    await expect(page.locator('.comment-form textarea')).toHaveCount(0);
+  });
+
+  test('each action posts its own body', async ({ page }) => {
+    for (const [label, body] of [['Explain it', 'explain it'], ['PR comment', 'comment inline on the PR for me as a separate comment']]) {
+      await openCommentForm(page);
+      await page.locator('.comment-form .quick-action', { hasText: label }).click();
+      await expect(mdSection(page).locator('.comment-card .comment-body').last()).toHaveText(body);
+    }
+  });
+
+  // A misclick must not throw away what the reviewer already wrote.
+  test('typed text is kept and the directive appended', async ({ page }) => {
+    await openCommentForm(page);
+    await page.locator('.comment-form textarea').fill('this breaks on empty tenants');
+    await page.locator('.comment-form .quick-action', { hasText: 'Fix it' }).click();
+
+    const body = mdSection(page).locator('.comment-card .comment-body').first();
+    await expect(body).toContainText('this breaks on empty tenants');
+    await expect(body).toContainText('fix it');
+  });
+
+  test('editing an existing comment offers no quick actions', async ({ page, request }) => {
+    const mdPath = await getMdPath(request);
+    await addComment(request, mdPath, 1, 'original text');
+    await loadPage(page);
+    await switchToDocumentView(page);
+
+    const section = mdSection(page);
+    await section.locator('.comment-actions button[title="Edit"]').first().click();
+    await expect(section.locator('textarea')).toBeVisible();
+    await expect(page.locator('.comment-form .quick-action')).toHaveCount(0);
   });
 });
