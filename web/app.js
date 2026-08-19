@@ -5005,7 +5005,7 @@
     { label: 'Explain it', body: 'explain it', title: 'Comment "explain it" and submit' },
     {
       label: 'PR comment',
-      body: 'comment inline on the PR for me as a separate comment',
+      body: 'comment inline on the github PR for me as a separate comment',
       title: 'Ask the agent to post this inline on the PR, as its own comment',
     },
   ];
@@ -6857,6 +6857,12 @@
     const triageBtns = [
       { verdict: 'fix', label: 'Fix', className: 'btn btn-sm btn-fix', title: 'Reply "fix" and go to the next comment' },
       { verdict: 'skip', label: 'Skip', className: 'btn btn-sm btn-skip', title: 'Reply "skip" and go to the next comment' },
+      {
+        verdict: 'comment inline on the github PR for me as a separate comment',
+        label: 'PR comment',
+        className: 'btn btn-sm btn-pr-comment',
+        title: 'Ask the agent to post this inline on the GitHub PR, as its own comment',
+      },
     ].map(function(spec) {
       const btn = document.createElement('button');
       btn.className = spec.className;

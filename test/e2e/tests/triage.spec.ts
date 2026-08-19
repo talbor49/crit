@@ -35,6 +35,19 @@ test.describe('Comment triage', () => {
     await expect(card.locator('.reply-body')).toContainText('skip');
   });
 
+  test('PR comment posts the escalation request as a reply', async ({ page, request }) => {
+    const mdPath = await getMdPath(request);
+    await addComment(request, mdPath, 1, '[Simplification] collapse these two helpers');
+    await loadPage(page);
+    await switchToDocumentView(page);
+
+    const card = mdSection(page).locator('.comment-card').first();
+    await expect(card).toBeVisible();
+    await card.locator('.btn-pr-comment').click();
+
+    await expect(card.locator('.reply-body')).toContainText('comment inline on the github PR for me as a separate comment');
+  });
+
   // The nav highlight self-clears after 1s, which is too tight to assert on
   // reliably; what matters here is that triaging one comment leaves the rest
   // of the queue interactive rather than stuck disabled.
@@ -88,6 +101,19 @@ test.describe('Comment severity', () => {
     await expect(section.locator('.comment-card.severity-missing-test')).toHaveCount(1);
   });
 
+  test('[Simplification] and its [Sim] alias share one badge', async ({ page, request }) => {
+    const mdPath = await getMdPath(request);
+    await addComment(request, mdPath, 1, '[Simplification] fold this into the publisher');
+    await addComment(request, mdPath, 3, '[Sim] shorter tag, same severity');
+    await loadPage(page);
+    await switchToDocumentView(page);
+
+    const section = mdSection(page);
+    await expect(section.locator('.comment-card.severity-simplification')).toHaveCount(2);
+    await expect(section.locator('.comment-severity-badge')).toHaveText(['Simplification', 'Simplification']);
+    await expect(section.locator('.comment-severity-title').first()).toHaveText('fold this into the publisher');
+  });
+
   test('an untagged comment gets no severity treatment', async ({ page, request }) => {
     const mdPath = await getMdPath(request);
     await addComment(request, mdPath, 1, 'plain note, no tag');
@@ -136,7 +162,7 @@ test.describe('Quick comment actions', () => {
   });
 
   test('each action posts its own body', async ({ page }) => {
-    for (const [label, body] of [['Explain it', 'explain it'], ['PR comment', 'comment inline on the PR for me as a separate comment']]) {
+    for (const [label, body] of [['Explain it', 'explain it'], ['PR comment', 'comment inline on the github PR for me as a separate comment']]) {
       await openCommentForm(page);
       await page.locator('.comment-form .quick-action', { hasText: label }).click();
       await expect(mdSection(page).locator('.comment-card .comment-body').last()).toHaveText(body);

@@ -6118,6 +6118,10 @@ body.crit-story-active .crit-story-rail-resizer { display: block; }
   --crit-severity-color: var(--crit-brand);
 }
 
+.severity-simplification {
+  --crit-severity-color: var(--crit-purple);
+}
+
 /* ===== Triage buttons (Fix / Skip) ===== */
 .reply-triage {
   display: flex;
@@ -6137,6 +6141,15 @@ body.crit-story-active .crit-story-rail-resizer { display: block; }
 
 .btn-skip:hover:not(:disabled) {
   color: var(--crit-editor-fg);
+}
+
+.btn-pr-comment {
+  border-color: color-mix(in srgb, var(--crit-brand) 45%, transparent);
+  color: var(--crit-brand);
+}
+
+.btn-pr-comment:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--crit-brand) 18%, transparent);
 }
 
 /* ===== Review brief (crit describe) ===== */

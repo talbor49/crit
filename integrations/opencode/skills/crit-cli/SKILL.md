@@ -62,6 +62,7 @@ headline, with the tag stripped from the body:
 | `[Important]` | yellow |
 | `[Suggestion]` | green |
 | `[Missing test]` | blue |
+| `[Simplification]` (or `[Sim]`) | purple |
 
 ```bash
 crit comment src/auth.go:42 '[Critical] Nil deref when the tenant is missing
@@ -72,9 +73,10 @@ Why it matters: every request on a fresh tenant panics before the handler runs.'
 Put the claim on the tag's line — that line becomes the headline. Untagged comments render normally.
 
 **Don't write "Reply `fix` to apply, `skip` to decline" into comment bodies.** Every comment has
-**Fix** and **Skip** buttons in its reply box; one click posts that reply and advances to the next
-comment. So a bare `fix` or `skip` reply is a deliberate decision, not a truncated one — treat
-`fix` as accept and `skip` as decline.
+**Fix**, **Skip** and **PR comment** buttons in its reply box; one click posts that reply and
+advances to the next comment. So a bare `fix` or `skip` reply is a deliberate decision, not a
+truncated one — treat `fix` as accept and `skip` as decline. **PR comment** posts
+"comment inline on the github PR for me as a separate comment": escalate that finding to an inline comment on the GitHub PR.
 
 ## Multiple active sessions
 

@@ -131,3 +131,17 @@ test('parseSeverity keeps a single-line tagged comment intact', () => {
   assert.equal(got.title, 'rename this helper');
   assert.equal(got.body, '');
 });
+
+test('parseSeverity recognises Simplification and its "Sim" alias', () => {
+  const full = helpers.parseSeverity('[Simplification] RowSender re-implements the publisher\n\nwhy it matters');
+  assert.equal(full.label, 'Simplification');
+  assert.equal(full.id, 'simplification');
+  assert.equal(full.title, 'RowSender re-implements the publisher');
+  assert.equal(full.body, 'why it matters');
+
+  // Aliases must share the full spelling's id, or they'd get their own CSS class.
+  const short = helpers.parseSeverity('[Sim] same thing, shorter tag');
+  assert.equal(short.label, 'Simplification');
+  assert.equal(short.id, 'simplification');
+  assert.equal(short.title, 'same thing, shorter tag');
+});

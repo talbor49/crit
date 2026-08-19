@@ -88,25 +88,29 @@
   // of a finding ("[Critical] Nil deref when tenant is missing"). Returns
   // { id, label, title, body } with the tag stripped, or null when the comment
   // has no tag. A bare "[Critical]" line yields an empty title.
+  // Key is the lowercased tag text; id drives the CSS class, so aliases that
+  // mean the same severity ("sim") must share the id of their full spelling.
   var SEVERITIES = {
-    critical: 'Critical',
-    important: 'Important',
-    suggestion: 'Suggestion',
-    'missing test': 'Missing test',
+    critical: { id: 'critical', label: 'Critical' },
+    important: { id: 'important', label: 'Important' },
+    suggestion: { id: 'suggestion', label: 'Suggestion' },
+    'missing test': { id: 'missing-test', label: 'Missing test' },
+    simplification: { id: 'simplification', label: 'Simplification' },
+    sim: { id: 'simplification', label: 'Simplification' },
   };
   function parseSeverity(body) {
     var text = String(body == null ? '' : body);
     var match = /^\s*\[([^\]\n]{1,24})\][ \t]*/.exec(text);
     if (!match) return null;
     var key = match[1].trim().toLowerCase();
-    var label = SEVERITIES[key];
-    if (!label) return null;
+    var severity = SEVERITIES[key];
+    if (!severity) return null;
     var rest = text.slice(match[0].length);
     var newline = rest.indexOf('\n');
     var title = (newline === -1 ? rest : rest.slice(0, newline)).trim();
     return {
-      id: key.replace(/\s+/g, '-'),
-      label: label,
+      id: severity.id,
+      label: severity.label,
       title: title,
       body: (newline === -1 ? '' : rest.slice(newline + 1)).replace(/^\n+/, ''),
     };
